@@ -11,33 +11,30 @@
             padding: 0;
             display: flex;
             justify-content: center;
-            position: relative; /* Add this line */
-            min-height: 100vh; /* Add this line */
-        }
+            position: relative;
+            min-height: 120vh;
+            background-color: #2b2b2b;
+            color: white;
         }
 
         .container {
             width: 100%;
             max-width: 1200px;
             display: grid;
-            grid-template-rows: auto 4fr 3fr;
+            grid-template-rows: auto 3fr 3fr;
             grid-gap: 20px;
             padding: 20px;
-            background-color: white;
+            background-color: #4b4b4b;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: absolute; /* Add this line */
-            top: 50%; /* Add this line */
-            left: 50%; /* Add this line */
-            transform: translate(-50%, -50%); /* Add this line */
+            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
-  
-        .container > * {
-            margin-bottom: 20px;
-         }
 
         .header {
-            background-color: #f1f1f1;
+            background-color: #1a1a1a;
             border-radius: 5px;
             padding: 20px;
             text-align: center;
@@ -50,40 +47,36 @@
         }
 
         .chart {
-            background-color: white;
+            background-color: #3a3a3a;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
             padding: 20px;
         }
 
         .messages {
-            background-color: white;
+            background-color: #4b4b4b;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
             padding: 20px;
         }
 
         .message {
-            background-color: #f1f1f1;
+            background-color: #78281f;
             border-radius: 5px;
             padding: 10px;
             margin-bottom: 10px;
-        }
-
-        .danger {
-            background-color: #f05050;
             color: white;
         }
 
         .warning {
-            background-color: #f7b733;
+            background-color: #d4a636;
             color: black;
         }
 
         .event-log {
-            background-color: white;
+            background-color: #3a3a3a;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
             padding: 20px;
         }
 
@@ -91,47 +84,103 @@
             border-bottom: 1px solid #ccc;
             padding-bottom: 5px;
             margin-bottom: 10px;
+            color: white;
         }
 
         .log-table {
             width: 100%;
+            border-collapse: collapse;
         }
 
-        .monitor {
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+        .log-table th, .log-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            color: white;
         }
 
-        .monitor-header {
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
+        .log-table th {
+            background-color: #4b4b4b;
+            color: white;
+        }
+
+        .messages .message {
+            padding: 10px;
             margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .messages .alert-danger {
+            background-color:#78281f;
+            color: white;
+        }
+
+        .messages .alert-warning {
+            background-color: #d4a636;
+            color: black;
+        }.messages .alert-success {
+            background-color: #5cb85c;
+            color: white;
+        }
+
+        .event-log .log-table {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .monitor-table-container {
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .monitor-table {
             width: 100%;
+            border-collapse: collapse;
         }
 
-        .show-more-button {
-            cursor: pointer;
-            background-color: #009688;
+        .monitor-table th, .monitor-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
             color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-            width: 100%;
-            margin-top: 10 px;
-            margin-bottom: 10px;
         }
 
-        .show-more-button:hover {
-            background-color: #00796b;
+        .monitor-table th {
+            background-color: #4b4b4b;
+            color: white;
+            font-weight: bold;
+        }
+
+        .monitor-table tr:nth-child(even) {
+            background-color: #5a5a5a;
+        }
+
+        .monitor-table td {
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        .monitor-table .sensor-name {
+            width: 20%;
+        }
+
+        .monitor-table .value {
+            width: 15%;
+            text-align: right;
+        }
+        
+        .monitor-table .unit {
+            width: 10%;
+            text-align: right;
+        }
+
+        .monitor-table .time {
+            width: 45%;
+            text-align: left;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -170,31 +219,105 @@
                 </tbody>
             </table>
         </div>
-        <div class="monitor">
-            <div class="monitor-header">
-                <h2>Last Messages</h2>
-            </div>
-            <table class="monitor-table">
-                <thead>
-                    <tr>
-                        <th>Zeit</th>
-                        <th>CO</th>
-                        <th>NO2</th>
-                        <th>SO2</th>
-                        <th>PM2.5</th>
-                    </tr>
-                </thead>
-                <tbody id="sensor-data-table">
-                    <!-- Die Sensordaten werden hier dynamisch hinzugefügt -->
-                </tbody>
-            </table>
-        </div>
+<div class="monitor">
+    <div class="monitor-header">
+        <h2>Last Messages</h2>
     </div>
+    <div class="monitor-table-container">
+        <table class="monitor-table">
+            <thead>
+                <tr>
+                    <th class="sensor-name">Sensor</th>
+                    <th class="value">Value</th>
+                    <th class="unit">Unit</th>
+                    <th class="time">Time</th>
+                </tr>
+            </thead>
+            <tbody id="sensor-data-table">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+        
+
+    </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+
     <script>
+
+
+
+    
+
+        // Funktion zum Aktualisieren der Tabelle
+
+    async function updateTable() {
+    const sensorData = await fetchSensorData();
+    const tableBody = document.getElementById('sensor-data-table');
+    tableBody.innerHTML = '';sensorData.forEach(data => {
+        const row = document.createElement('tr');
+
+
+        const sensorNameCell = document.createElement('td');
+        sensorNameCell.textContent = data.sensorName;
+        sensorNameCell.classList.add('sensor-name');
+        row.appendChild(sensorNameCell);
+
+
+        const valueCell = document.createElement('td');
+        valueCell.textContent = data.value;
+        valueCell.classList.add('value');
+        row.appendChild(valueCell);
+
+
+        const unitCell = document.createElement('td');
+        unitCell.textContent = data.unit;
+        unitCell.classList.add('unit');
+        row.appendChild(unitCell);
+
+
+        const timeCell = document.createElement('td');
+        timeCell.textContent = data.time;
+        timeCell.classList.add('time');
+        row.appendChild(timeCell);
+
+        tableBody.appendChild(row);
+    });
+}
+
+
+        function updateMessageTable() {
+        const messages = [
+        { level: 'danger', message: 'System 1 ist fehlerhaft.' },
+        { level: 'warning', message: 'System 2 hat Anzeichen von Problemen.' },
+        { level: 'success', message: 'System 3 ist fehlerfrei.' }
+    ];
+
+    const tableBody = document.getElementById('message-log-table');
+    tableBody.innerHTML = '';
+    messages.forEach(data => {
+        const row = document.createElement('tr');
+        const levelCell = document.createElement('td');
+        levelCell.className = data.level;
+        levelCell.textContent = data.level.toUpperCase();
+        row.appendChild(levelCell);
+
+        const messageCell = document.createElement('td');
+        const messageSpan = document.createElement('span');
+        messageSpan.className = `message alert-${data.level}`;
+        messageSpan.textContent = data.message;
+        messageCell.appendChild(messageSpan);
+        row.appendChild(messageCell);
+        tableBody.appendChild(row);
+    });
+}
+
         // Funktion zum Abrufen der Ereignisdaten
         function fetchEventData() {
+
             // Dummy-Daten für den Demonstrationszweck
             return [
                 {
@@ -202,11 +325,13 @@
                     timestamp: '2023-03-10 14:30:00',
                     message: 'System initialisiert.'
                 },
+
                 {
                     level: 'warning',
                     timestamp: '2023-03-10 14:31:00',
                     message: 'System 2 hat Anzeichen von Problemen.'
                 },
+
                 {
                     level: 'error',
                     timestamp: '2023-03-10 14:32:00',
@@ -215,11 +340,14 @@
             ];
         }
 
+
         // Funktion zum Anzeigen der Ereignisdaten in der Tabelle
+
         function updateEventTable() {
             const eventData = fetchEventData();
             const tableBody = document.getElementById('event-log-table');
             tableBody.innerHTML = '';
+
             eventData.forEach(data => {
                 const row = document.createElement('tr');
                 const levelCell = document.createElement('td');
@@ -247,16 +375,14 @@
             sensorData.forEach(data => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${data.timestamp}</td>
-                    <td>${data.co}</td>
-                    <td>${data.no2}</td>
-                    <td>${data.so2}</td>
-                    <td>${data.pm25}</td>
+                    <td class="sensor-name">${data.sensorName}</td>
+                    <td class="value">${data.value}</td>
+                    <td class="unit">${data.unit}</td>
+                    <td class="time">${data.time}</td>
                 `;
                 tableBody.appendChild(row);
             });
         }
-
         // Aktualisierung der Ereignistabelle
         updateEventTable();
 
@@ -288,4 +414,3 @@
 </script>
 </body>
 </html>
-               
