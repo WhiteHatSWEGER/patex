@@ -1,6 +1,7 @@
 import json
 import time
 from datetime import datetime
+import requests
 import random
 
 # Funktion zum Lesen der Sensorwerte (Dummy-Daten für Testzwecke)
@@ -15,11 +16,19 @@ def read_sensor_values():
 
 # Funktion zum Speichern der Sensorwerte in eine JSON-Datei
 def save_sensor_data_to_json(data):
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    filename = "sensor_data.json"
-    with open(filename, 'a') as file:
-        json.dump({"timestamp": timestamp, "data": data}, file)
-        file.write('\n')
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    filename = f"sensor_data_{timestamp}.json"
+    with open(filename, 'w') as file:
+        json.dump(data, file)
+
+# Funktion zum Senden der Sensorwerte an eine Webseite
+def send_data_to_webpage(data):
+    url = "http://example.com/receive_data"  # Ersetzen Sie "http://example.com/receive_data" durch die tatsächliche URL Ihrer Webseite
+    response = requests.post(url, json=data)
+    if response.status_code == 200:
+        print("Daten erfolgreich an die Webseite gesendet.")
+    else:
+        print("Fehler beim Senden der Daten an die Webseite:", response.text)
 
 # Hauptfunktion zum Ausführen des Programms
 def main():
@@ -27,7 +36,8 @@ def main():
         sensor_data = read_sensor_values()
         save_sensor_data_to_json(sensor_data)
         print("Sensorwerte gespeichert:", sensor_data)
-        time.sleep(5) # Intervall zum Lesen und Speichern der Sensorwerte (hier 5 Sekunden)
+        send_data_to_webpage(sensor_data)
+        time.sleep(60) # Intervall zum Lesen, Speichern und Senden der Sensorwerte (hier 60 Sekunden)
 
 if __name__ == "__main__":
     main()
