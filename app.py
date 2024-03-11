@@ -24,9 +24,10 @@ def send_sensor_data():
         ]
     }
     response = requests.post(
-        "http://localhost:5000/sensor-data",  # Replace with your Flask app's URL
-        json=sensor_data
-    )
+    "http://localhost:5001/sensor-data",  # Replace with your Flask app's URL
+    json = sensor_data
+
+)
     if response.status_code == 200:
         print("Sensor data sent successfully")
     else:
