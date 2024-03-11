@@ -1,14 +1,68 @@
-from flasgger import Swagger
-from flask import Flask, jsonify, request
-from Api import Api
+from flask import Flask, render_template
+import json
+import time
+
 app = Flask(__name__)
-app.config["Swagger"] = { "Title" : "WingSS"}
-Swagger = Swagger(app)
+
+import json
+import time
+import requests
+
+# ...
+
+def send_sensor_data():
+    sensor_data = {
+        "id": 1,
+        "timestamp": int(time.time()),
+        "sensor_values": [
+            {
+                "sensor_name": "Sensor1",
+                "value": 10,
+                "unit": "unit1"
+            },
+            # ... Add more sensor data here
+        ]
+    }
+    response = requests.post(
+        "http://localhost:5000/sensor-data",  # Replace with your Flask app's URL
+        json=sensor_data
+    )
+    if response.status_code == 200:
+        print("Sensor data sent successfully")
+    else:
+        print(f"Error sending sensor data: {response.status_code} - {response.text}")
+
+# Call the send_sensor_data function periodically
+while True:
+    send_sensor_data()
+    time.sleep(5)
+
+@app.route('/')
+def home():
+    with open('static/sensor-data.json') as f:
+        sensor_data = json.load(f)
+    return render_template('index.html', sensor_data=sensor_data)
+
+@app.route('/data')
+def get_data():
+    with open('static/sensor-data.json') as f:
+        sensor_data = json.load(f)
+    return json.dumps(sensor_data)
+
+@app.route('/sensor-data', methods=['POST'])
+
+def handle_sensor_data():
+    data = request.get_json()
+    id = data.get('id')
+    timestamp = data.get('timestamp')
+    sensor_values = data.get('sensor_values', [])
 
 
-path_to_data = "/Tmp/SensorData"
-api = Api(path_to_data)
+    # Process the sensor data here
+    # Store it in a database or use it as needed
 
-@app.route("/api/sensors")
-def index():
-    return api.get_sensors()
+    return jsonify({'message': 'Sensor data received'})
+
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')
