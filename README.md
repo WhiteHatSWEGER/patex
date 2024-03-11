@@ -108,6 +108,8 @@ Make sure to replace the file paths in the app.py example with the actual paths 
 
 
 #########################################################################################################################################
+
+
 #SENSORS
 In this example, the read_i2c_sensor function reads data from the I2C sensor. The collect_sensor_data function uses the read_i2c_sensor function to collect the sensor data. The rest of the code remains the same as in the previous example.
 
