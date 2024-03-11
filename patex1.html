@@ -249,8 +249,11 @@
     <script>
 
 
-        async function fetchSensorData() {
-    const response = await fetch('http://localhost:5000/data');  // Replace with your Flask app's URL
+async function fetchSensorData() {
+    const currentTime = Math.floor(Date.now() / 1000);
+    const oneHourAgo = currentTime - 60 * 60;
+
+    const response = await fetch(`/api/sensor-data?from=${oneHourAgo}&to=${currentTime}`);
     const data = await response.json();
     return data;
 }
@@ -373,14 +376,17 @@ async function fetchSensorData() {
         }
 
         // Funktion zum Abrufen der Sensordaten
-        async function fetchSensorData() {
-            const response = await fetch('sensor-data.json');
-            const data = await response.json();
-            return data;
-        }
+async function fetchSensorData() {
+    const currentTime = Math.floor(Date.now() / 1000);
+    const oneHourAgo = currentTime - 60 * 60;
+
+    const response = await fetch(`/api/sensor-data?from=${oneHourAgo}&to=${currentTime}`);
+    const data = await response.json();
+    return data;
+}
 
         // Funktion zum Aktualisieren der Tabelle
-       const updateChart = () => {
+      const updateChart = () => {
     const currentTime = Math.floor(Date.now() / 1000);
     const oneHourAgo = currentTime - 60 * 60;
 
@@ -408,7 +414,11 @@ async function fetchSensorData() {
                 options: {
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Sensor Value' // Set the y-axis label here
+                            }
                         }
                     }
                 }
