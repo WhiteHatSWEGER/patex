@@ -24,6 +24,19 @@ def calculate_percentage(actual_value, max_value):
         return 100
     return int(round((actual_value / max_value) * 100))
 
+def filter_sensor_data(from_timestamp, to_timestamp):
+    filtered_data = []
+    if os.path.exists(path_to_data):
+        for file in os.listdir(path_to_data):
+            if file.endswith('.txt'):
+                with open(os.path.join(path_to_data, file), 'r') as f:
+                    for line in f:
+                        entry = json.loads(line)
+                        timestamp = entry['Info']['TimeStamp']
+                        if from_timestamp <= timestamp <= to_timestamp:
+                            filtered_data.append(entry)
+    return filtered_data
+
 def collect_sensor_data():
     sensor_data = {}
     sensor_data["Info"] = {
