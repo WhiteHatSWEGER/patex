@@ -250,42 +250,48 @@
 
 
 
-    
+        // Funktion zum Aktualisieren der Tabelle
+        async function fetchSensorData() {
+            const response = await fetch('sensor-data.json');
+            const data = await response.json();
+            return data;
+        }
+
 
         // Funktion zum Aktualisieren der Tabelle
 
-    async function updateTable() {
-    const sensorData = await fetchSensorData();
-    const tableBody = document.getElementById('sensor-data-table');
-    tableBody.innerHTML = '';sensorData.forEach(data => {
-        const row = document.createElement('tr');
+        async function updateTable() {
+            const sensorData = await fetchSensorData();
+            const tableBody = document.getElementById('sensor-data-table');
+            tableBody.innerHTML = '';
+
+            for (const [sensorName, sensorDataObj] of Object.entries(sensorData)) {
+                const row = document.createElement('tr');
+                const sensorNameCell = document.createElement('td');
+                sensorNameCell.textContent = sensorName;
+                sensorNameCell.classList.add('sensor-name');
+                row.appendChild(sensorNameCell);
+
+                const measureCell = document.createElement('td');
+                measureCell.textContent = sensorDataObj.Measure;
+                row.appendChild(measureCell);
+
+                const valueCell = document.createElement('td');
+                valueCell.textContent = sensorDataObj.Value;
+                valueCell.classList.add('value');
+                row.appendChild(valueCell);
+
+                const criticalCell = document.createElement('td');
+                criticalCell.textContent = sensorDataObj.Critical ? 'Yes' : 'No';
+                row.appendChild(criticalCell);
 
 
-        const sensorNameCell = document.createElement('td');
-        sensorNameCell.textContent = data.sensorName;
-        sensorNameCell.classList.add('sensor-name');
-        row.appendChild(sensorNameCell);
+                const warningCell = document.createElement('td');
+                warningCell.textContent = sensorDataObj.Warning ? 'Yes' : 'No';
+                row.appendChild(warningCell);
 
-
-        const valueCell = document.createElement('td');
-        valueCell.textContent = data.value;
-        valueCell.classList.add('value');
-        row.appendChild(valueCell);
-
-
-        const unitCell = document.createElement('td');
-        unitCell.textContent = data.unit;
-        unitCell.classList.add('unit');
-        row.appendChild(unitCell);
-
-
-        const timeCell = document.createElement('td');
-        timeCell.textContent = data.time;
-        timeCell.classList.add('time');
-        row.appendChild(timeCell);
-
-        tableBody.appendChild(row);
-    });
+                tableBody.appendChild(row);
+    };
 }
 
 
@@ -368,23 +374,17 @@
         }
 
         // Funktion zum Aktualisieren der Tabelle
-        async function updateTable() {
-            const sensorData = await fetchSensorData();
-            const tableBody = document.getElementById('sensor-data-table');
-            tableBody.innerHTML = '';
-            sensorData.forEach(data => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="sensor-name">${data.sensorName}</td>
-                    <td class="value">${data.value}</td>
-                    <td class="unit">${data.unit}</td>
-                    <td class="time">${data.time}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-        // Aktualisierung der Ereignistabelle
-        updateEventTable();
+        const updateChart = () => {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    const labels = data.map(entry => entry.TimeStamp);
+                    const values = data.map(entry => entry.Value);
+
+                    // Update the chart here using the labels and values
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        };
 
         // Aktualisierung der Sensortabelle alle 5 Sekunden
         setInterval(updateTable, 5000);
