@@ -99,3 +99,18 @@ Run your Flask application:
 Now your Flask application should be running on your Raspberry Pi, and you can access it using a web browser on the same network by entering the Raspberry Pi's IP address in the address bar.
 
 Make sure to replace the file paths in the app.py example with the actual paths on your Raspberry Pi.
+
+
+
+
+
+
+
+
+#########################################################################################################################################
+#SENSORS
+In this example, the read_i2c_sensor function reads data from the I2C sensor. The collect_sensor_data function uses the read_i2c_sensor function to collect the sensor data. The rest of the code remains the same as in the previous example.
+
+Please note that you should replace the SENSOR_TYPE, SENSOR_ADDRESS, REGISTER_ADDRESS_START, and REGISTER_ADDRESS_END variables with the actual sensor configuration. The MEASURES list includes the maximum allowed values for each sensor. You can adjust these values based on your specific requirements.
+
+To send the collected data to the Flask server, you can replace the print(json.dumps(sensor_data)) line with the requests library
