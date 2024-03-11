@@ -249,6 +249,12 @@
     <script>
 
 
+        async function fetchSensorData() {
+    const response = await fetch('http://localhost:5000/data');  // Replace with your Flask app's URL
+    const data = await response.json();
+    return data;
+}
+
 
         // Funktion zum Aktualisieren der Tabelle
 async function fetchSensorData() {
