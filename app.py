@@ -70,12 +70,10 @@ def handle_sensor_data():
     timestamp = data.get('timestamp')
     sensor_values = data.get('sensor_values', [])
 
-
     # Process the sensor data here
     # Store it in a database or use it as needed
 
     return jsonify({'message': 'Sensor data received'})
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
