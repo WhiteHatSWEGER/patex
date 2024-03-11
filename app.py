@@ -64,9 +64,6 @@ def get_data():
     return json.dumps(sensor_data)
 
 @app.route('/sensor-data', methods=['POST'])
-
-
-
 def handle_sensor_data():
     data = request.get_json()
     id = data.get('id')
@@ -77,6 +74,23 @@ def handle_sensor_data():
     # Store it in a database or use it as needed
 
     return jsonify({'message': 'Sensor data received'})
+    
+@app.route('/api/sensor-data')
+def get_sensor_data():
+    from_timestamp = request.args.get('from')
+    to_timestamp = request.args.get('to')
 
+    if from_timestamp and to_timestamp:
+        from_timestamp = int(from_timestamp)
+        to_timestamp = int(to_timestamp)
+
+        # Filter the sensor data based on the provided timestamps
+        # Replace the following line with the actual filtering logic
+        sensor_data = filter_sensor_data(from_timestamp, to_timestamp)
+
+        return jsonify(sensor_data)
+
+    return jsonify({'error': 'Invalid request'})
+    
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
