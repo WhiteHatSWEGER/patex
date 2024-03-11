@@ -37,6 +37,19 @@ while True:
     send_sensor_data()
     time.sleep(5)
 
+@app.route('/api/sensors')
+def get_sensors():
+    api = Api("path/to/sensor/data")  # Replace with the path to your sensor data
+    return jsonify(api.get_sensors())
+
+@app.route('/api/sensor-data', methods=['POST'])
+def add_sensor_data():
+    api = Api("path/to/sensor/data")  # Replace with the path to your sensor data
+    data = request.get_json()
+    sensor_id = data.get('sensor_id')
+    sensor_data = data.get('sensor_data')
+    return jsonify(api.add_sensor_data(sensor_id, sensor_data))
+
 @app.route('/')
 def home():
     with open('static/sensor-data.json') as f:
