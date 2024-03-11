@@ -67,7 +67,23 @@ def collect_sensor_data():
 def main():
     while True:
         sensor_data = collect_sensor_data()
-        print(json.dumps(sensor_data))
+        current_time = int(time.time())
+        one_hour_ago = current_time - 60 * 60
+
+        # Filter the sensor data based on the one-hour time window
+        filtered_sensor_data = []
+        for entry in sensor_data:
+            timestamp = entry['Info']['TimeStamp']
+            if one_hour_ago <= timestamp <= current_time:
+                filtered_sensor_data.append(entry)
+
+        # Append the filtered sensor data to the corresponding file
+        for entry in filtered_sensor_data:
+            sensor_id = entry['Info']['ID']
+            file_path = os.path.join(path_to_data, f"{sensor_id}.txt")
+            with open(file_path, 'a') as f:
+                f.write(json.dumps(entry) + "\n")
+
         time.sleep(5)
 
 if __name__ == "__main__":
