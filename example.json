@@ -1,0 +1,69 @@
+{
+    "Info":{
+        "TimeStemp": "TimeStemp",
+        "ID": "ID"
+    },
+
+    "Sensor1": {
+        "Measure": "NO2",
+        "Value":    100,
+        "Critical": true,
+        "Warning":  false
+    },
+
+    "Sensor2": {
+        "Measure": "NO2",
+        "Value":    100,
+        "Critical": true,
+        "Warning":  false
+    },
+
+    "Sensor3": {
+        "Measure": "NO2",
+        "Value":    100,
+        "Critical": true,
+        "Warning":  false
+    },
+
+    "Sensor4": {
+        "Measure": "NO2",
+        "Value":    100,
+        "Critical": true,
+        "Warning":  false
+    },
+
+    "Sensor5": {
+        "Measure": "NO2",
+        "Value":    100,
+        "Critical": true,
+        "Warning":  false
+    },
+
+    "Sensor6": {
+        "Measure": "NO2",
+        "Value":    100,
+        "Critical": true,
+        "Warning":  false
+    },
+
+    "Sensor7": {
+        "Measure": "NO2",
+        "Value":    100,
+        "Critical": true,
+        "Warning":  false
+    },
+
+    "Sensor8": {
+        "Measure": "NO2",
+        "Value":    100,
+        "Critical": true,
+        "Warning":  false
+    },
+
+    "Sensor9": {
+        "Measure": "NO2",
+        "Value":    100,
+        "Critical": true,
+        "Warning":  false
+    }
+}
