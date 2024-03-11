@@ -1,12 +1,9 @@
 from flask import Flask, render_template
 import json
 import time
+import requests
 
 app = Flask(__name__)
-
-import json
-import time
-import requests
 
 # ...
 
