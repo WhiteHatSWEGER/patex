@@ -65,6 +65,12 @@ def get_data():
 
 @app.route('/sensor-data', methods=['POST'])
 
+async function fetchSensorData() {
+    const response = await fetch('http://localhost:5000/data');  // Replace with your Flask app's URL
+    const data = await response.json();
+    return data;
+}
+
 def handle_sensor_data():
     data = request.get_json()
     id = data.get('id')
