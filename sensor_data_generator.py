@@ -1,34 +1,73 @@
-import json
-import random
+import smbus
 import time
-import RPi.GPIO as GPIO
+import random
+import json
 
-# Set up GPIO pins here
-# Replace the pin numbers and sensor reading code with your actual setup
+# Set up the I2C interface
+bus = smbus.SMBus(1)  # Use 0 for Raspberry Pi version 1, 1 for Raspberry Pi version 2 and newer
 
-def read_sensor_data():
+# Define the sensor type, address, and register addresses
+SENSOR_TYPE = 0x04  # Replace with your sensor type
+SENSOR_ADDRESS = 0x23  # Replace with your sensor address
+REGISTER_ADDRESS_START = 0x00  # Replace with your sensor's register address for the start of the data
+REGISTER_ADDRESS_END = 0x09  # Replace with your sensor's register address for the end of the data
+
+def read_i2c_sensor(bus, sensor_type, sensor_address, register_address_start, register_address_end):
+    data = []
+    for address in range(register_address_start, register_address_end + 1):
+        value = bus.read_byte_data(sensor_address, address)
+        data.append(value)
+    return data
+
+def calculate_percentage(actual_value, max_value):
+    if actual_value >= max_value:
+        return 100
+    return int(round((actual_value / max_value) * 100))
+
+def collect_sensor_data():
     sensor_data = {}
-    for i in range(1, 10):
-        sensor_name = f"Sensor{i}"
-        measure = "Measure_{}".format(i)
-        value = random.randint(0, 100)
-        critical = random.choice([True, False])
-        warning = random.choice([True, False])
-        sensor_data[sensor_name] = {
+    sensor_data["Info"] = {
+        "TimeStamp": int(time.time()),
+        "ID": random.randint(1, 10000)
+    }
+
+    # Replace the following lines with the actual sensor data collection
+    data = read_i2c_sensor(bus, SENSOR_TYPE, SENSOR_ADDRESS, REGISTER_ADDRESS_START, REGISTER_ADDRESS_END)
+
+    MEASURES = [
+        ("CO2", 1000),
+        ("NO2", 200),
+        ("Butan", 50),
+        ("Propean", 100),
+        ("Alkohol", 200),
+        ("Rauch", 100),
+        ("NO", 50),
+        ("CO", 50),
+        ("O3", 100)
+    ]
+
+    for i, (measure, max_value) in enumerate(MEASURES):
+        value = data[i]
+        warning_threshold = max_value * 0.9
+        critical_threshold = max_value
+
+        percent = calculate_percentage(value, max_value)
+        critical = percent >= critical_threshold
+        warning = percent >= warning_threshold
+
+        sensor_data[f"Sensor{i + 1}"] = {
             "Measure": measure,
-            "Value": value,
+            "Value": percent,
             "Critical": critical,
-            "Warning": warning,
-            "TimeStamp": int(time.time()),
-            "ID": random.randint(1, 10000)
+            "Warning": warning
         }
+
     return sensor_data
 
 def main():
     while True:
-        sensor_data = read_sensor_data()
-        with open("static/sensor-data.json", "w") as f:
-            json.dump(sensor_data, f)
+        sensor_data = collect_sensor_data()
+        print(json.dumps(sensor_data))
         time.sleep(5)
 
 if __name__ == "__main__":
