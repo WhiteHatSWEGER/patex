@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gas Sensor Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
-            justify-content: center;
-            position: relative;
+            justify-content: center;position: relative;
             min-height: 120vh;
             background-color: #2b2b2b;
             color: white;
         }
-
         .container {
             width: 100%;
             max-width: 1200px;
@@ -32,167 +32,142 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
-
-        .header {
+        header {
             background-color: #1a1a1a;
             border-radius: 5px;
             padding: 20px;
             text-align: center;
         }
-
-        .chart-and-messages {
+        main {
             display: grid;
             grid-template-columns: 70% 30%;
             grid-gap: 20px;
         }
-
         .chart {
             background-color: #3a3a3a;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
             padding: 20px;
         }
-
         .messages {
             background-color: #4b4b4b;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
             padding: 20px;
         }
-
         .message {
-            background-color: #78281f;
-            border-radius: 5px;
             padding: 10px;
             margin-bottom: 10px;
-            color: white;
+            border-radius: 5px;
         }
-
         .warning {
             background-color: #d4a636;
             color: black;
         }
-
         .event-log {
             background-color: #3a3a3a;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
             padding: 20px;
         }
-
         .log-header {
             border-bottom: 1px solid #ccc;
             padding-bottom: 5px;
             margin-bottom: 10px;
             color: white;
         }
-
         .log-table {
             width: 100%;
             border-collapse: collapse;
         }
-
         .log-table th, .log-table td {
             border: 1px solid #ccc;
             padding: 8px;
             text-align: left;
             color: white;
         }
-
         .log-table th {
             background-color: #4b4b4b;
             color: white;
         }
-
         .messages .message {
             padding: 10px;
             margin-bottom: 10px;
             border-radius: 5px;
         }
-
         .messages .alert-danger {
             background-color:#78281f;
             color: white;
         }
-
         .messages .alert-warning {
             background-color: #d4a636;
             color: black;
-        }.messages .alert-success {
-            background-color: #5cb85c;
-            color: white;
         }
-
         .event-log .log-table {
             max-height: 300px;
             overflow-y: auto;
         }
-
         .monitor-table-container {
             max-height: 300px;
             overflow-y: auto;
         }
-
         .monitor-table {
             width: 100%;
             border-collapse: collapse;
         }
-
         .monitor-table th, .monitor-table td {
             border: 1px solid #ccc;
             padding: 8px;
             text-align: left;
             color: white;
         }
-
         .monitor-table th {
             background-color: #4b4b4b;
             color: white;
             font-weight: bold;
         }
-
         .monitor-table tr:nth-child(even) {
             background-color: #5a5a5a;
         }
-
         .monitor-table td {
             font-size: 1.1rem;
             color: white;
         }
-
         .monitor-table .sensor-name {
             width: 20%;
         }
-
         .monitor-table .value {
             width: 15%;
             text-align: right;
         }
-        
         .monitor-table .unit {
             width: 10%;
             text-align: right;
         }
-
         .monitor-table .time {
             width: 45%;
             text-align: left;
         }
+        .error-row {
+            background-color: #f00;
+            color: #fff;
+          }
     </style>
 </head>
-
 <body>
-  <div class="container">
-        <div class="header">
+    <div class="container">
+        <header class="header">
             <h1>Gas Sensor Dashboard</h1>
-        </div>
-        <div class="chart-and-messages">
+        </header>
+        <main>
             <div class="chart">
+                <div id="chart-legend"></div>
                 <canvas id="hourly-data-chart"></canvas>
+                <div class="loading" style="display: none;">Loading...</div>
             </div>
             <div class="messages">
                 <div class="message alert-danger">
-                    <strong>System 1 ist fehlerhaft.</strong>
+                <strong>System 1 ist fehlerhaft.</strong>
                 </div>
                 <div class="message alert-warning">
                     <strong>System 2 hat Anzeichen von Problemen.</strong>
@@ -201,12 +176,12 @@
                     <strong>System 3 ist fehlerfrei.</strong>
                 </div>
             </div>
-        </div>
+        </main>
         <div class="event-log">
             <div class="log-header">
                 <h2>Event Log</h2>
             </div>
-            <table class="log-table">
+            <tableclass="log-table">
                 <thead>
                     <tr>
                         <th>Level</th>
@@ -239,68 +214,127 @@
     </div>
 </div>
 
-        
-
-    </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   <script>
+    function customDateFormat(date) {
+        const options = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+        return new Intl.DateTimeFormat('en-US', options).format(date);
+      }
+
     const ctx = document.getElementById('hourly-data-chart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: [],
-        datasets: [{
-          label: 'Sensor Data',
-          data: [],
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1
-        }]
+        datasets: []
       },
-      options: {
+      options: {tooltips: {
+          callbacks: {
+            label: function(tooltipItem, data) {
+              const value = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+              return value;
+            }
+          }
+        },
         scales: {
           y: {
-            beginAtZero: true
+            beginAtZero: true,
+            max: 100
+          },
+          x: {
+            type: 'time',
+            time: {
+              unit: 'minute',
+              displayFormats: {
+                minute: 'HH:mm:ss'
+              },
+              min: '120 minutes ago',
+              max: 'now'
+            },
+            ticks: {
+              callback: function(value, index, values) {
+                return customDateFormat(value);
+              }
+            }
           }
         }
       }
     });
 
-    function updateChart(labels, data) {
+    function updateChart(labels, datasets) {
       chart.data.labels = labels;
-      chart.data.datasets[0].data = data;
+      chart.data.datasets = datasets;
       chart.update();
     }
 
-    function addDataPoint(label, value) {
-      const labels = chart.data.labels;
-      const data = chart.data.datasets[0].data;
+    
 
-      labels.push(label);
-      data.push(value);
-
-      if (labels.length > 20) {
-        labels.shift();
-        data.shift();
+    function addDataPoint(label, value, color) {
+        const labels = chart.data.labels;
+        if (labels.length === 0) {
+          chart.data.labels.push(label);
+          chart.data.datasets = [{
+            label: label,
+            data: [value],
+            backgroundColor: color,
+            borderColor: color,
+            borderWidth: 1
+          }];
+        } else {
+          const lastDataset = chart.data.datasets[chart.data.datasets.length - 1];
+          lastDataset.data.push(value);
+          chart.data.labels.push(label);
+        }
+        if (labels.length > 100) {
+          labels.shift();
+          chart.data.datasets.forEach(dataset => {
+            dataset.data.shift();
+          });
+        }
+        chart.update();
       }
 
-      updateChart(labels, data);
-    }
-
     async function fetchSensorData() {
-      const currentTime = Math.floor(Date.now() / 1000);
-      const oneHourAgo = currentTime - 60 * 60;
+        try {
+          const currentTime = Math.floor(Date.now() / 1000);
+          const oneHourAgo = currentTime - 60 *60;
+      
+          const response = await fetch('https://your-domain.com/api/sensor-data?from=' + oneHourAgo + '&to=' + currentTime);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          return data;
+        } catch (error) {
+          console.error('Error fetching data:', error);
+      
+          // Add error data point to chart
+          addDataPoint("Error 308/404", 0, "red");
+      
+          // Add error row to table
+          const tableBody = document.getElementById('sensor-data-table');
+          const errorRow = document.createElement('tr');
+          errorRow.classList.add('error-row');
+          const errorCell = document.createElement('td');
+          errorCell.colSpan = 4;
+          errorCell.textContent = 'Error fetching data (308/404)';
+          errorRow.appendChild(errorCell);
+          tableBody.appendChild(errorRow);
+      
+          return [{ Timestamp: customDateFormat(sensorDataObj.Timestamp), Value: 0 }];
+        }
+      }
 
-      const response = await fetch(`/api/sensor-data?from=${oneHourAgo}&to=${currentTime}`);
-      const data = await response.json();
-      return data;
-    }
+    
 
     async function updateTable() {
       const sensorData = await fetchSensorData();
       const tableBody = document.getElementById('sensor-data-table');
       tableBody.innerHTML = '';
+
+      const datasets = [];
 
       for (const [sensorName, sensorDataObj] of Object.entries(sensorData)) {
         const row = document.createElement('tr');
@@ -318,7 +352,7 @@
         valueCell.classList.add('value');
         row.appendChild(valueCell);
 
-        const criticalCell = document.createElement('td');
+        const criticalCell =document.createElement('td');
         criticalCell.textContent = sensorDataObj.Critical ? 'Yes' : 'No';
         row.appendChild(criticalCell);
 
@@ -327,14 +361,37 @@
         row.appendChild(warningCell);
 
         tableBody.appendChild(row);
+        
 
         // Add data point to chart
-        addDataPoint(sensorName, sensorDataObj.Value);
+        const color = getRandomColor();
+        addDataPoint(customDateFormat(sensorDataObj.Timestamp), sensorDataObj.Value, color);
+
+        // Add dataset to legend
+        const legend = document.getElementById('chart-legend');
+        const legendItem = document.createElement('span');
+        legendItem.style.backgroundColor = color;
+        legendItem.style.display = 'inline-block';
+        legendItem.style.width = '10px';
+        legendItem.style.height = '10px';
+        legendItem.style.marginRight = '5px';
+        legendItem.style.borderRadius = '50%';
+        const legendLabel = document.createElement('span');
+        legendLabel.textContent = sensorName;
+        legend.appendChild(legendItem);
+        legend.appendChild(legendLabel);
       }
+    }
+
+    function getRandomColor() {
+      return '#' + Math.floor(Math.random()*16777215).toString(16);
     }
 
     // Aktualisierung der Sensortabelle alle 5 Sekunden
     setInterval(updateTable, 5000);
+
+    // Fetch data and update table on page load
+    updateTable();
   </script>
 </body>
 </html>
