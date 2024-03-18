@@ -1,35 +1,92 @@
-from influxdb_client import InfluxDBClient, Point, WritePrecision, WriteOptions
-from influxdb_client.client.write_api import SYNCHRONOUS
+from flask import Flask, render_template
+import json
+import time
+import requests
 
-class Api:
-    def __init__(self, url, token, organization, bucket):
-        self.__url = url
-        self.__token = token
-        self.__organization = organization
-        self.__bucket = bucket
+app = Flask(__name__)
 
-        self.__client = InfluxDBClient(url=self.__url, token=self.__token)
-        self.__client.switch_database(self.__bucket)
-        self.__write_api = self.__client.write_api(write_options=WriteOptions(batch_size=500, flush_interval=10_000))
+# ...
 
-    def get_sensors(self):
-def get_sensors(self):
-    query = "SELECT * FROM gas_measurement"
-    result = self.__client.query_api().query(query)
-    sensors = []
-    for table in result.raw["series"]:
-        for row in table["values"]:
-            sensors.append(dict(zip(row[0], row[1:])))
-    return sensors
+def send_sensor_data():
+    sensor_data = {
+        "id": 1,
+        "timestamp": int(time.time()),
+        "sensor_values": [
+            {
+                "sensor_name": "Sensor1",
+                "value": 10,
+                "unit": "unit1"
+            },
+            # ... Add more sensor data here
+        ]
+    }
+    response = requests.post(
+        "http://localhost:5001/sensor-data",  # Replace with your Flask app's URL
+        json=sensor_data
+   )
+    if response.status_code == 200:
+        print("Sensor data sent successfully")
+    else:
+        print(f"Error sending sensor data: {response.status_code} - {response.text}")
 
-    def add_sensor_data(self, location, data):
-        point = (
-            Point("gas_measurement")
-            .tag("location", location)
-            .field("gas_1", data["gas_1"])
-            .field("gas_2", data["gas_2"])
-            # Add more fields for other gases as needed
-            .time_precision(WritePrecision.MS)
-        )
+# Call the send_sensor_data function periodically
+while True:
+    send_sensor_data()
+    time.sleep(5)
 
-        self.__write_api.write(bucket=self.__bucket, record=point)
+@app.route('/api/sensors')
+def get_sensors():
+    api = Api("path/to/sensor/data")  # Replace with the path to your sensor data
+    return jsonify(api.get_sensors())
+
+@app.route('/api/sensor-data', methods=['POST'])
+def add_sensor_data():
+    api = Api("path/to/sensor/data")  # Replace with the path to your sensor data
+    data = request.get_json()
+    sensor_id = data.get('sensor_id')
+    sensor_data = data.get('sensor_data')
+    return jsonify(api.add_sensor_data(sensor_id, sensor_data))
+
+@app.route('/')
+def home():
+    with open('static/sensor-data.json') as f:
+        sensor_data = json.load(f)
+    return render_template('index.html', sensor_data=sensor_data)
+
+@app.route('/data')
+def get_data():
+    with open('static/sensor-data.json') as f:
+        sensor_data = json.load(f)
+    return json.dumps(sensor_data)
+
+@app.route('/sensor-data', methods=['POST'])
+def handle_sensor_data():
+    data = request.get_json()
+    id = data.get('id')
+    timestamp = data.get('timestamp')
+    sensor_values = data.get('sensor_values', [])
+
+    # Process the sensor data here
+    # Store it in a database or use it as needed
+
+    return jsonify({'message': 'Sensor data received'})
+
+@app.route('/api/sensor-data')
+def get_sensor_data():
+    from_timestamp = request.args.get('from')
+   to_timestamp = request.args.get('to')
+
+    if from_timestamp and to_timestamp:
+        from_timestamp = int(from_timestamp)
+        to_timestamp = int(to_timestamp)
+
+        # Filter the sensor data based on the provided timestamps
+        # Replace the following line with the actual filtering logic
+        sensor_data = filter_sensor_data(from_timestamp, to_timestamp)
+
+        return jsonify(sensor_data)
+
+    return jsonify({'error': 'Invalid request'})
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5001)
