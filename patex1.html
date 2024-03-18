@@ -182,7 +182,7 @@
 </head>
 
 <body>
-    <div class="container">
+  <div class="container">
         <div class="header">
             <h1>Gas Sensor Dashboard</h1>
         </div>
@@ -244,214 +244,97 @@
     </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-
-    <script>
-
-
-async function fetchSensorData() {
-    const currentTime = Math.floor(Date.now() / 1000);
-    const oneHourAgo = currentTime - 60 * 60;
-
-    const response = await fetch(`/api/sensor-data?from=${oneHourAgo}&to=${currentTime}`);
-    const data = await response.json();
-    return data;
-}
-
-
-        // Funktion zum Aktualisieren der Tabelle
-async function fetchSensorData() {
-    const response = await fetch('http://localhost:5000/api/sensor-data');  // Replace with your Flask app's URL
-    const data = await response.json();
-    return data;
-}
-
-
-        // Funktion zum Aktualisieren der Tabelle
-
-        async function updateTable() {
-            const sensorData = await fetchSensorData();
-            const tableBody = document.getElementById('sensor-data-table');
-            tableBody.innerHTML = '';
-
-            for (const [sensorName, sensorDataObj] of Object.entries(sensorData)) {
-                const row = document.createElement('tr');
-                const sensorNameCell = document.createElement('td');
-                sensorNameCell.textContent = sensorName;
-                sensorNameCell.classList.add('sensor-name');
-                row.appendChild(sensorNameCell);
-
-                const measureCell = document.createElement('td');
-                measureCell.textContent = sensorDataObj.Measure;
-                row.appendChild(measureCell);
-
-                const valueCell = document.createElement('td');
-                valueCell.textContent = sensorDataObj.Value;
-                valueCell.classList.add('value');
-                row.appendChild(valueCell);
-
-                const criticalCell = document.createElement('td');
-                criticalCell.textContent = sensorDataObj.Critical ? 'Yes' : 'No';
-                row.appendChild(criticalCell);
-
-
-                const warningCell = document.createElement('td');
-                warningCell.textContent = sensorDataObj.Warning ? 'Yes' : 'No';
-                row.appendChild(warningCell);
-
-                tableBody.appendChild(row);
-    };
-}
-
-
-        function updateMessageTable() {
-        const messages = [
-        { level: 'danger', message: 'System 1 ist fehlerhaft.' },
-        { level: 'warning', message: 'System 2 hat Anzeichen von Problemen.' },
-        { level: 'success', message: 'System 3 ist fehlerfrei.' }
-    ];
-
-    const tableBody = document.getElementById('message-log-table');
-    tableBody.innerHTML = '';
-    messages.forEach(data => {
-        const row = document.createElement('tr');
-        const levelCell = document.createElement('td');
-        levelCell.className = data.level;
-        levelCell.textContent = data.level.toUpperCase();
-        row.appendChild(levelCell);
-
-        const messageCell = document.createElement('td');
-        const messageSpan = document.createElement('span');
-        messageSpan.className = `message alert-${data.level}`;
-        messageSpan.textContent = data.message;
-        messageCell.appendChild(messageSpan);
-        row.appendChild(messageCell);
-        tableBody.appendChild(row);
-    });
-}
-
-        // Funktion zum Abrufen der Ereignisdaten
-        function fetchEventData() {
-
-            // Dummy-Daten für den Demonstrationszweck
-            return [
-                {
-                    level: 'info',
-                    timestamp: '2023-03-10 14:30:00',
-                    message: 'System initialisiert.'
-                },
-
-                {
-                    level: 'warning',
-                    timestamp: '2023-03-10 14:31:00',
-                    message: 'System 2 hat Anzeichen von Problemen.'
-                },
-
-                {
-                    level: 'error',
-                    timestamp: '2023-03-10 14:32:00',
-                    message: 'System 1 ist fehlerhaft.'
-                }
-            ];
-        }
-
-
-        // Funktion zum Anzeigen der Ereignisdaten in der Tabelle
-
-        function updateEventTable() {
-            const eventData = fetchEventData();
-            const tableBody = document.getElementById('event-log-table');
-            tableBody.innerHTML = '';
-
-            eventData.forEach(data => {
-                const row = document.createElement('tr');
-                const levelCell = document.createElement('td');
-                levelCell.className = data.level;
-                levelCell.textContent = data.level.toUpperCase();
-                row.appendChild(levelCell);
-                                row.appendChild(document.createElement('td')); // Leerer Spalte für Timestamp
-                row.appendChild(document.createElement('td')); // Leerer Spalte für Message
-                tableBody.appendChild(row);
-            });
-        }
-
-        // Funktion zum Abrufen der Sensordaten
-async function fetchSensorData() {
-    const currentTime = Math.floor(Date.now() / 1000);
-    const oneHourAgo = currentTime - 60 * 60;
-
-    const response = await fetch(`/api/sensor-data?from=${oneHourAgo}&to=${currentTime}`);
-    const data = await response.json();
-    return data;
-}
-
-        // Funktion zum Aktualisieren der Tabelle
-      const updateChart = () => {
-    const currentTime = Math.floor(Date.now() / 1000);
-    const oneHourAgo = currentTime - 60 * 60;
-
-    fetch(`/api/sensor-data?from=${oneHourAgo}&to=${currentTime}`)
-        .then(response => response.json())
-        .then(data => {
-            const labels = data.map(entry => entry.TimeStamp);
-            const values = data.map(entry => entry.Value);
-
-            // Update the chart here using the labels and values
-            // For example, using Chart.js:
-            const ctx = document.getElementById('hourly-data-chart').getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Sensor Data',
-                        data: values,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Sensor Value' // Set the y-axis label here
-                            }
-                        }
-                    }
-                }
-            });
-        })
-        .catch(error => console.error('Error fetching data:', error));
-};
-
-        // Aktualisierung der Sensortabelle alle 5 Sekunden
-        setInterval(updateTable, 5000);
-    </script>
-<script>
+  <script>
     const ctx = document.getElementById('hourly-data-chart').getContext('2d');
     const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-            datasets: [{
-                label: 'Sample Data',
-                data: [12, 19, 3, 5, 2, 3, 7, 8, 9, 10],
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Sensor Data',
+          data: [],
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
         }
+      }
     });
-</script>
+
+    function updateChart(labels, data) {
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = data;
+      chart.update();
+    }
+
+    function addDataPoint(label, value) {
+      const labels = chart.data.labels;
+      const data = chart.data.datasets[0].data;
+
+      labels.push(label);
+      data.push(value);
+
+      if (labels.length > 20) {
+        labels.shift();
+        data.shift();
+      }
+
+      updateChart(labels, data);
+    }
+
+    async function fetchSensorData() {
+      const currentTime = Math.floor(Date.now() / 1000);
+      const oneHourAgo = currentTime - 60 * 60;
+
+      const response = await fetch(`/api/sensor-data?from=${oneHourAgo}&to=${currentTime}`);
+      const data = await response.json();
+      return data;
+    }
+
+    async function updateTable() {
+      const sensorData = await fetchSensorData();
+      const tableBody = document.getElementById('sensor-data-table');
+      tableBody.innerHTML = '';
+
+      for (const [sensorName, sensorDataObj] of Object.entries(sensorData)) {
+        const row = document.createElement('tr');
+        const sensorNameCell = document.createElement('td');
+        sensorNameCell.textContent = sensorName;
+        sensorNameCell.classList.add('sensor-name');
+        row.appendChild(sensorNameCell);
+
+        const measureCell = document.createElement('td');
+        measureCell.textContent = sensorDataObj.Measure;
+        row.appendChild(measureCell);
+
+        const valueCell = document.createElement('td');
+        valueCell.textContent = sensorDataObj.Value;
+        valueCell.classList.add('value');
+        row.appendChild(valueCell);
+
+        const criticalCell = document.createElement('td');
+        criticalCell.textContent = sensorDataObj.Critical ? 'Yes' : 'No';
+        row.appendChild(criticalCell);
+
+        const warningCell = document.createElement('td');
+        warningCell.textContent = sensorDataObj.Warning ? 'Yes' : 'No';
+        row.appendChild(warningCell);
+
+        tableBody.appendChild(row);
+
+        // Add data point to chart
+        addDataPoint(sensorName, sensorDataObj.Value);
+      }
+    }
+
+    // Aktualisierung der Sensortabelle alle 5 Sekunden
+    setInterval(updateTable, 5000);
+  </script>
 </body>
 </html>
