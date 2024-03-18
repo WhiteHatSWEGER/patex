@@ -1,0 +1,49 @@
+import requests
+import json
+
+# Import sensor data
+from mq135 import get_mq135_data
+from mq2 import get_mq2_data
+from mq3 import get_mq3_data
+from mq4 import get_mq4_data
+from mq5 import get_mq5_data
+from mq6 import get_mq6_data
+from mq7 import get_mq7_data
+from mq8 import get_mq8_data
+from mq9 import get_mq9_data
+
+# URL for the InfluxDB API
+url = "http://localhost:5001/api/sensor-data"
+
+# Import sensor data
+mq135_data = get_mq135_data()
+mq2_data = get_mq2_data()
+mq3_data = get_mq3_data()
+mq4_data = get_mq4_data()
+mq5_data = get_mq5_data()
+mq6_data = get_mq6_data()
+mq7_data = get_mq7_data()
+mq8_data = get_mq8_data()
+mq9_data = get_mq9_data()
+
+# Combine sensor data into a single dictionary
+sensor_data = {
+    "MQ135": mq135_data,
+    "MQ2": mq2_data,
+    "MQ3": mq3_data,
+   "MQ4": mq4_data,
+    "MQ5": mq5_data,
+    "MQ6": mq6_data,
+    "MQ7": mq7_data,
+    "MQ8": mq8_data,
+    "MQ9": mq9_data
+}
+
+# Send sensor data to the InfluxDB API
+response = requests.post(url, json=sensor_data)
+
+# Check for errors
+if response.status_code != 200:
+    print("Error sending sensor data to InfluxDB API:", response.text)
+else:
+    print("Sensor data sent to InfluxDB API")
