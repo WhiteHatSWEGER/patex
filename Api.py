@@ -13,11 +13,14 @@ class Api:
         self.__write_api = self.__client.write_api(write_options=WriteOptions(batch_size=500, flush_interval=10_000))
 
     def get_sensors(self):
-        # InfluxDB does not support listing measurement names directly.
-        # You can use the following workaround to get a list of unique location tags:
-        cursor = self.__client.query_api().query('show measurement tags with key = "location"')
-        locations = [point["location"] for point in cursor.raw["series"][0]["values"]]
-        return locations
+def get_sensors(self):
+    query = "SELECT * FROM gas_measurement"
+    result = self.__client.query_api().query(query)
+    sensors = []
+    for table in result.raw["series"]:
+        for row in table["values"]:
+            sensors.append(dict(zip(row[0], row[1:])))
+    return sensors
 
     def add_sensor_data(self, location, data):
         point = (
