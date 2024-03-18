@@ -1,21 +1,32 @@
-import os
-import json
+from influxdb_client import InfluxDBClient, Point, WritePrecision, WriteOptions
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 class Api:
-    def __init__(self, path_to_data):
-        self.__path_to_data = path_to_data
-    
+    def __init__(self, url, token, organization, bucket):
+        self.__url = url
+        self.__token = token
+        self.__organization = organization
+        self.__bucket = bucket
+
+        self.__client = InfluxDBClient(url=self.__url, token=self.__token)
+        self.__client.switch_database(self.__bucket)
+        self.__write_api = self.__client.write_api(write_options=WriteOptions(batch_size=500, flush_interval=10_000))
+
     def get_sensors(self):
-        sensors = []
-        if os.path.exists(self.__path_to_data):
-            with os.scandir(self.__path_to_data) as entries:
-                for entry in entries:
-                    sensors.append(entry.name)
-        return sensors
-    
-def add_sensor_data(self, sensor_id, data):
-        if os.path.exists(self.__path_to_data):
-            with open(self.__path_to_data + "/" + str(sensor_id) + ".txt") as file:
-                file.write(json.dumps(data) + "\n")
-                return data
-                
+        # InfluxDB does not support listing measurement names directly.
+        # You can use the following workaround to get a list of unique location tags:
+        cursor = self.__client.query_api().query('show measurement tags with key = "location"')
+        locations = [point["location"] for point in cursor.raw["series"][0]["values"]]
+        return locations
+
+    def add_sensor_data(self, location, data):
+        point = (
+            Point("gas_measurement")
+            .tag("location", location)
+            .field("gas_1", data["gas_1"])
+            .field("gas_2", data["gas_2"])
+            # Add more fields for other gases as needed
+            .time_precision(WritePrecision.MS)
+        )
+
+        self.__write_api.write(bucket=self.__bucket, record=point)
