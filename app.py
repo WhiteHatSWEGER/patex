@@ -1,9 +1,7 @@
 # app.py
 import sqlite3
 import json
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
+from flask import Flask, render_template
 
 # Connect to the local LibreOffice Base database
 def get_db_connection():
@@ -11,30 +9,25 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-@app.route('/api/sensor-data', methods=['GET'])
-def get_sensor_data():
-    conn = get_db_connection()
-    sensor_data = []
-    for row in conn.execute('SELECT * FROM sensor_data ORDER BY timestamp DESC'):
-        sensor_data.append({
-            "measurement": row['measurement'],
-            "timestamp": row['timestamp'],
-            "value": row['value'],
-            "fields": dict(row)
-        })
-    conn.close()
-    return jsonify(sensor_data)
+# Connect to the local LibreOffice Base database
+def get_event_log_connection():
+    conn = sqlite3.connect('event_log.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
-@app.route('/api/sensor-data', methods=['POST'])
-def add_sensor_data():
+app = Flask(__name__)
+
+@app.route('/')
+def index():
     conn = get_db_connection()
-    data = request.get_json()
-    for measurement in data:
-        conn.execute('INSERT INTO sensor_data (measurement, timestamp, value) VALUES (?, ?, ?)',
-                     (measurement, datetime.now(), data[measurement]))
-    conn.commit()
+    sensor_data = [dict(row) for row in conn.execute('SELECT * FROM sensor_data ORDER BY timestamp DESC LIMIT 100')]
     conn.close()
-    return jsonify({"message": "Sensor data received"})
+
+    conn = get_event_log_connection()
+    event_log = [dict(row) for row in conn.execute('SELECT * FROM event_log ORDER BY timestamp DESC LIMIT 100')]
+    conn.close()
+
+    return render_template('index.html', sensor_data=sensor_data, event_log=event_log)
 
 if __name__ == '__main__':
     app.run(debug=True)
