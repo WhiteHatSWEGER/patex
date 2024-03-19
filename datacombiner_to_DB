@@ -1,18 +1,51 @@
 import requests
 import json
+import sqlite3
+
+# Connect to the local LibreOffice Base database
+def get_db_connection():
+    conn = sqlite3.connect('sensor_data.db')
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # Import sensor data
-from mq135 import get_mq135_data
-from mq2 import get_mq2_data
-from mq3 import get_mq3_data
-from mq4 import get_mq4_data
-from mq5 import get_mq5_data
-from mq6 import get_mq6_data
-from mq7 import get_mq7_data
-from mq8 import get_mq8_data
-from mq9 import get_mq9_data
+def get_mq135_data():
+    # Add code to import MQ135 sensor data here
+    pass
 
-# URL for the InfluxDB API
+def get_mq2_data():
+    # Add code to import MQ2 sensor data here
+    pass
+
+def get_mq3_data():
+    # Add code to import MQ3 sensor data here
+    pass
+
+def get_mq4_data():
+    # Add code to import MQ4 sensor data here
+    pass
+
+def get_mq5_data():
+    # Add code to import MQ5 sensor data here
+    pass
+
+def get_mq6_data():
+    # Add code to import MQ6 sensor data here
+    pass
+
+def get_mq7_data():
+    # Add code to import MQ7 sensor data here
+    pass
+
+def get_mq8_data():
+    # Add code to import MQ8 sensor data here
+    pass
+
+def get_mq9_data():
+    # Add code to import MQ9 sensor data here
+    pass
+
+# URL for the local LibreOffice Base database API
 url = "http://localhost:5001/api/sensor-data"
 
 # Import sensor data
@@ -27,11 +60,11 @@ mq8_data = get_mq8_data()
 mq9_data = get_mq9_data()
 
 # Combine sensor data into a single dictionary
-sensor_data = {
+sensor_data= {
     "MQ135": mq135_data,
     "MQ2": mq2_data,
     "MQ3": mq3_data,
-   "MQ4": mq4_data,
+    "MQ4": mq4_data,
     "MQ5": mq5_data,
     "MQ6": mq6_data,
     "MQ7": mq7_data,
@@ -39,11 +72,11 @@ sensor_data = {
     "MQ9": mq9_data
 }
 
-# Send sensor data to the InfluxDB API
+# Send sensor data to the local LibreOffice Base database API
 response = requests.post(url, json=sensor_data)
 
 # Check for errors
 if response.status_code != 200:
-    print("Error sending sensor data to InfluxDB API:", response.text)
+    print("Error sending sensor data to local LibreOffice Base database API:", response.text)
 else:
-    print("Sensor data sent to InfluxDB API")
+    print("Sensor data sent to local LibreOffice Base database API")
