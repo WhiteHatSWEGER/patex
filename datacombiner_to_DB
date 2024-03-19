@@ -1,6 +1,5 @@
-import requests
-import json
 import sqlite3
+import json
 
 # Connect to the local LibreOffice Base database
 def get_db_connection():
@@ -14,7 +13,7 @@ def get_mq135_data():
     pass
 
 def get_mq2_data():
-    # Add code to import MQ2 sensor data here
+    # Add codeto import MQ2 sensor data here
     pass
 
 def get_mq3_data():
@@ -45,38 +44,27 @@ def get_mq9_data():
     # Add code to import MQ9 sensor data here
     pass
 
-# URL for the local LibreOffice Base database API
-url = "http://localhost:5001/api/sensor-data"
-
-# Import sensor data
-mq135_data = get_mq135_data()
-mq2_data = get_mq2_data()
-mq3_data = get_mq3_data()
-mq4_data = get_mq4_data()
-mq5_data = get_mq5_data()
-mq6_data = get_mq6_data()
-mq7_data = get_mq7_data()
-mq8_data = get_mq8_data()
-mq9_data = get_mq9_data()
+# Insert sensor data into the local LibreOffice Base database
+def insert_sensor_data(sensor_data):
+    conn = get_db_connection()
+    for measurement in sensor_data:
+        conn.execute('INSERT INTO sensor_data (measurement, timestamp, value) VALUES (?, ?, ?)',
+                     (measurement, datetime.now(), sensor_data[measurement]))
+    conn.commit()
+    conn.close()
 
 # Combine sensor data into a single dictionary
-sensor_data= {
-    "MQ135": mq135_data,
-    "MQ2": mq2_data,
-    "MQ3": mq3_data,
-    "MQ4": mq4_data,
-    "MQ5": mq5_data,
-    "MQ6": mq6_data,
-    "MQ7": mq7_data,
-    "MQ8": mq8_data,
-    "MQ9": mq9_data
+sensor_data = {
+    "MQ135": get_mq135_data(),
+    "MQ2": get_mq2_data(),
+    "MQ3": get_mq3_data(),
+    "MQ4": get_mq4_data(),
+    "MQ5": get_mq5_data(),
+    "MQ6": get_mq6_data(),
+    "MQ7": get_mq7_data(),
+    "MQ8": get_mq8_data(),
+    "MQ9": get_mq9_data()
 }
 
-# Send sensor data to the local LibreOffice Base database API
-response = requests.post(url, json=sensor_data)
-
-# Check for errors
-if response.status_code != 200:
-    print("Error sending sensor data to local LibreOffice Base database API:", response.text)
-else:
-    print("Sensor data sent to local LibreOffice Base database API")
+# Send sensor data to the local LibreOffice Base database
+insert_sensor_data(sensor_data)
