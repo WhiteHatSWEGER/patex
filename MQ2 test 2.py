@@ -41,12 +41,12 @@ class MQ2GasSensor:
         else:
             return 0
 
-# Define pin numbers according to your connections
-DATA_PIN = 0  # Example pin number, change it as needed
+# Define pin numbers 
+DATA_PIN = 0  
 
 mq2 = MQ2GasSensor(DATA_PIN)
 
 while True:
     ppm = mq2.get_gas_concentration()
     print("Gas concentration (ppm):", ppm)
-    utime.sleep(5)  # Adjust the interval as needed
+    utime.sleep(5)  # interval
