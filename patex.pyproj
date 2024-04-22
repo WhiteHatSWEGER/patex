@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{013ed78d-cd75-49ad-aec2-84626d1be55c}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>main.py</StartupFile>
+    <SearchPath>static\;static\;RaspPi5\</SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>MSBuild|venv|$(MSBuildProjectFullPath)</InterpreterId>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="instance\sensors.db" />
+    <Content Include="sensors.db" />
+    <Content Include="static\index.html" />
+    <Content Include="static\log.html" />
+    <Content Include="static\toolsData.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="app.py" />
+    <Compile Include="datacombiner_to_DB.py" />
+    <Compile Include="initializedbDUMMY.py" />
+    <Compile Include="initialize_db.py" />
+    <Compile Include="main.py" />
+    <Compile Include="RaspPi5\app.py" />
+    <Compile Include="RaspPi5\data_to_csv.py" />
+    <Compile Include="RaspPi5\mq135.py" />
+    <Compile Include="RaspPi5\mq2.py" />
+    <Compile Include="RaspPi5\mq3.py" />
+    <Compile Include="RaspPi5\mq4.py" />
+    <Compile Include="RaspPi5\mq5.py" />
+    <Compile Include="RaspPi5\mq6.py" />
+    <Compile Include="RaspPi5\mq7.py" />
+    <Compile Include="RaspPi5\mq8.py" />
+    <Compile Include="RaspPi5\mq9.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="instance" />
+    <Folder Include="RaspPi5" />
+    <Folder Include="static" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="venv\">
+      <Id>venv</Id>
+      <Description>venv (Python 3.12 (64-bit))</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <Version>0.0</Version>
+      <Architecture>X64</Architecture>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+    </Interpreter>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

@@ -1,0 +1,382 @@
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Gas Sensor Dashboard</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+		<style>
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+				background-color: #f5f5f7;
+				color: #1d1d1f;
+				margin: 0;
+				padding: 20px;
+			}
+
+			.container,
+			.container-fluid {
+				max-width: 1200px;
+				color: #1d1d1f;
+			}
+
+			.chart,
+			.messages,
+			.event-log,
+			.monitor {
+				background-color: #ffffff;
+				border: 1px solid #e1e1e1;
+				border-radius: 10px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				margin-bottom: 20px;
+				padding: 20px;
+			}
+
+			.chart canvas,
+			.event-log table,
+			.monitor table {
+				width: 100%;
+			}
+
+			.log-table th,
+			.log-table td,
+			.monitor-table th,
+			.monitor-table td {
+				border-color: #e1e1e1;
+			}
+
+			.message {
+				border: 1px solid #e1e1e1;
+				border-radius: 5px;
+				margin-bottom: 10px;
+				padding: 10px;
+			}
+
+			.dark-mode {
+				background-color: #1d1d1f;
+				color: #f5f5f7;
+			}
+
+			.alert-danger {
+				background-color: #ff3b30;
+				color: white;
+			}
+
+			.alert-warning {
+				background-color: #ff9500;
+				color: white;
+			}
+
+			.alert-success {
+				background-color: #34c759;
+				color: white;
+			}
+
+			footer {
+				margin-top: 40px;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<nav class="container-fluid">
+			<ul>
+				<li>
+					<strong>
+						<a href="index.html"> Gas Sensor Dashboard</a>
+					</strong>
+				</li>
+			</ul>
+			<ul>
+				<li>
+					<a href="http://127.0.0.1:5000/log">Messages and Log</a>
+				</li>
+				<li>
+					<a href="http://127.0.0.1:5000/toolsData" role="button">Tools and Data</a>
+				</li>
+			</ul>
+		</nav>
+		<main class="container">
+			<div class="grid">
+				<section class="chart">
+					<!-- Dark Mode Toggle -->
+					<div>
+						<input type="checkbox" id="dark-mode-toggle" name="darkMode" />
+						<label for="dark-mode-toggle">Dark Mode</label>
+					</div>
+					<!-- Overview Chart -->
+					<div id="chart-legend"></div>
+					<canvas id="overview-chart"></canvas>
+					<div class="loading" style="display: none;">Loading...</div>
+					<!-- Dropdown for selecting sensor charts -->
+					<label for="sensor-select">Select Sensor:</label>
+					<select id="sensor-select">
+						<option value="all">All Sensors</option>
+						<option value="1">Sensor 1</option>
+						<option value="2">Sensor 2</option>
+						<option value="3">Sensor 3</option>
+						<option value="4">Sensor 4</option>
+						<option value="5">Sensor 5</option>
+						<option value="6">Sensor 6</option>
+						<option value="7">Sensor 7</option>
+						<option value="8">Sensor 8</option>
+						<option value="9">Sensor 9</option>
+					</select>
+					<!-- Container for individual sensor charts -->
+					<div id="sensor-charts-container"></div>
+				</section>
+			</div>
+			<section class="filters">
+				<h2>Filter Data</h2>
+				<label for="start-date">Start Date:</label>
+				<input type="date" id="start-date" name="start-date">
+				<label for="end-date">End Date:</label>
+				<input type="date" id="end-date" name="end-date">
+				<button onclick="applyFilters()">Apply Filters</button>
+			</section>
+		</main>
+		<footer class="container">
+			<small>
+				<a href="https://youtu.be/dQw4w9WgXcQ">Privacy Policy • Terms of Service</a>
+			</small>
+		</footer>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/min/moment.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2/dist/chartjs-plugin-annotation.min.js"></script>
+		<script>
+			let currentSensorSelection = 'all';
+			const chartOptions = {
+				tooltips: {
+					enabled: true, // Disable tooltips globally
+					callbacks: {
+						label: function(tooltipItem, data) {
+							var label = data.datasets[tooltipItem.datasetIndex].label || '';
+							if (label) {
+								label += ': ';
+							}
+							label += Math.round(tooltipItem.yLabel * 100) / 100;
+							return label;
+						}
+					}
+				},
+				title: {
+					display: true,
+					text: 'All Sensors' // Default title
+				},
+				legend: {
+					display: false
+				},
+				scales: {
+					yAxes: [{
+						ticks: {
+							beginAtZero: true,
+							max: 120,
+							min: 0,
+							stepSize: 10
+						},
+						gridLines: {
+							display: true,
+							color: 'rgba(0, 0, 0, 0.1)'
+						}
+					}],
+					xAxes: [{
+						type: 'time',
+						time: {
+							unit: 'minute',
+							displayFormats: {
+								minute: 'HH:mm'
+							}
+						},
+						ticks: {
+							display: true,
+							maxTicksLimit: 15,
+							callback: function(value, index, values) {
+								return customDateFormat(new Date(values[index].value));
+							}
+						},
+						gridLines: {
+							display: false
+						}
+					}]
+				},
+				plugins: {
+					datalabels: {
+						display: false
+					},
+					zoom: {
+						pan: {
+							enabled: true,
+							mode: 'x',
+						},
+						zoom: {
+							wheel: {
+								enabled: true,
+							},
+							pinch: {
+								enabled: true,
+							},
+							mode: 'x',
+						},
+					},
+					annotation: {
+						annotations: [{
+							type: 'line',
+							mode: 'horizontal',
+							scaleID: 'y-axis-0',
+							value: 100,
+							borderColor: 'lightgrey',
+							borderWidth: 2,
+							label: {
+								enabled: true,
+								content: 'Warning Level',
+								position: 0,
+							},
+						}]
+					}
+				}
+			};
+			// Helper Functions
+			function customDateFormat(date) {
+				const options = {
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit'
+				};
+				return new Intl.DateTimeFormat('en-US', options).format(date);
+			}
+
+			function updateChartTitle(chart, title) {
+				chart.options.title.text = title; // Set new title
+				chart.update();
+			}
+
+			function getRandomColor() {
+				return '#' + Math.floor(Math.random() * 16777215).toString(16);
+			}
+			// Event Listeners
+			document.getElementById('dark-mode-toggle').addEventListener('change', function(event) {
+				document.body.classList.toggle('dark-mode', event.target.checked);
+			});
+			document.getElementById('sensor-select').addEventListener('change', function(event) {
+				currentSensorSelection = "Sensors: " + event.target.value;
+				updateCharts();
+			});
+			// Data Fetching
+			async function fetchSensorData(startDate = '', endDate = '') {
+				let url = `http://127.0.0.1:5000/api/sensor-data`;
+				try {
+					const response = await fetch(url);
+					if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+					return await response.json();
+				} catch (error) {
+					console.error('Error fetching sensor data:', error);
+					return null; // Return null to indicate an error occurred
+				}
+                  finally {
+                    await adjustFetchTiming(); // Schedule the next fetch
+                    }
+			}
+			async function applyFilters() {
+				const startDate = document.getElementById('start-date').value;
+				const endDate = document.getElementById('end-date').value;
+				// Assuming your sensor data fetch function can handle filtering by dates
+				await updateCharts(currentSensorSelection, startDate, endDate);
+			}
+            async function adjustFetchTiming() {
+    const timingResponse = await fetch('http://127.0.0.1:5001/api/data-timing');
+    const timingData = await timingResponse.json();
+
+    const interval = timingData.interval; // Interval in seconds
+    const startTime = new Date(timingData.startTime); // Assuming ISO string format
+
+    // Calculate next expected data generation time
+    const now = new Date();
+    const elapsed = (now - startTime) / 1000; // Elapsed time in seconds
+    const nextInterval = interval - (elapsed % interval);
+
+    setTimeout(fetchSensorData, nextInterval * 1000); // Adjust initial fetch to align with the next data generation interval
+}
+
+// Call adjustFetchTiming instead of directly calling fetchSensorData
+adjustFetchTiming();
+
+			function addErrorDataPoint(chart) {
+				const errorTime = new Date();
+				const errorDataset = {
+					label: 'Error',
+					data: [{
+						t: errorTime,
+						y: 0
+					}],
+					borderColor: '#FF0000',
+					backgroundColor: '#FF0000',
+					fill: false,
+					borderDash: [5, 5] // Optional: makes the line dashed
+				};
+				chart.data.datasets.push(errorDataset);
+				chart.update();
+			}
+			// Chart Initialization
+			async function updateCharts(selectedSensor = 'all', startDate = '', endDate = '') {
+				const sensorData = await fetchSensorData(startDate, endDate);
+				const ctx = document.getElementById('overview-chart').getContext('2d');
+				// Initialize an empty datasets array
+				const datasets = [];
+				// Check for error in sensorData fetch
+				if (!sensorData) {
+					// Handle the error
+					if (window.overviewChart instanceof Chart) {
+						addErrorDataPoint(window.overviewChart);
+					} else {
+						// Initialize the chart with an error data point if the chart does not exist
+						window.overviewChart = new Chart(ctx, {
+							type: 'line',
+							data: {
+								datasets: []
+							},
+							options: chartOptions
+						});
+						addErrorDataPoint(window.overviewChart);
+					}
+					updateChartTitle(window.overviewChart, currentSensorSelection); // Update chart title to 'Error'
+					return;
+				}
+				// Destroy previous chart if it exists
+				if (window.overviewChart instanceof Chart) {
+					window.overviewChart.destroy();
+				}
+				// Populate the datasets array with sensor data
+				sensorData.forEach(sensor => {
+					datasets.push({
+						label: `Sensor ${sensor.sensorId}`,
+						data: sensor.data.map(dataPoint => ({
+							t: dataPoint.timestamp,
+							y: dataPoint.value
+						})), // Update the data property with the correct format
+						borderColor: getRandomColor(),
+						fill: false,
+						xAxisID: 'time-axis' // Assign an x-axis ID for the dataset
+					});
+				});
+				// Initialize a new chart with the populated datasets array
+				window.overviewChart = new Chart(ctx, {
+					type: 'line',
+					data: {
+						datasets: datasets,
+						labels: sensorData[0].data.map(dataPoint => dataPoint.timestamp) // Set the labels with timestamp values
+					},
+					options: chartOptions
+				});
+				// Set the chart title based on the selected sensor
+				const chartTitle = selectedSensor === 'all' ? 'All Sensors' : `Sensor ${selectedSensor}`;
+				updateChartTitle(window.overviewChart, chartTitle);
+			}
+			// Initialize the charts with all sensors on page load
+document.addEventListener('DOMContentLoaded', function() {
+  adjustFetchTiming(); // This now handles the initial and subsequent data fetches
+});
+
+		</script>
+	</body>
+</html>

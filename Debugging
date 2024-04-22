@@ -1,0 +1,3 @@
+log hat keine verbindung zu logentries, geht trotzdem zu sensor data, kriegt nichts
+Wir haben keine sensor id, dementsprechend muss die logik angepasst werden in der db oder bevor das gefetched wird, irgendiwe muss das umgewandelt wird
+zeitverzögerung

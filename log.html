@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Gas Sensor Dashboard - Logs & Messages</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+		<style>
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+				background-color: #f5f5f7;
+				color: #1d1d1f;
+				margin: 0;
+				padding: 20px;
+			}
+
+			.container,
+			.container-fluid {
+				max-width: 1200px;
+				color: #1d1d1f;
+			}
+
+			.messages-container {
+				background-color: #ffffff;
+				border: 1px solid #e1e1e1;
+				border-radius: 10px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				margin-bottom: 20px;
+				padding: 20px;
+			}
+
+			.chart canvas,
+			.event-log table,
+			.monitor table {
+				width: 100%;
+			}
+
+			.log-table th,
+			.log-table td,
+			.monitor-table th,
+			.monitor-table td {
+				border-color: #e1e1e1;
+			}
+
+			.message {
+				border: 1px solid #e1e1e1;
+				border-radius: 5px;
+				margin-bottom: 10px;
+				padding: 10px;
+			}
+
+			.dark-mode {
+				background-color: #333;
+				color: #fff;
+			}
+
+			.dark-mode .messages-container {
+			background-color: #222;
+			color: #eee;
+			}
+			.alert-danger {
+				background-color: #ff3b30;
+				color: white;
+			}
+
+			.alert-warning {
+				background-color: #ff9500;
+				color: white;
+			}
+
+			.alert-success {
+				background-color: #34c759;
+				color: white;
+			}
+
+			footer {
+				margin-top: 40px;
+				text-align: center;
+			}
+
+			.filter-section {
+				margin-bottom: 20px;
+			}
+
+			.message-list {
+				list-style-type: none;
+				padding: 0;
+			}
+
+			.message-list li {
+				margin-bottom: 10px;
+			}
+
+			.messages-container {
+				border: 1px solid #ccc;
+				border-radius: 8px;
+				padding: 20px;
+				margin-top: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<nav class="container-fluid">
+			<ul>
+				<li>
+					<strong>
+						<a href="index.html">Gas Sensor Dashboard</a>
+					</strong>
+				</li>
+			</ul>
+			<ul>
+				<li>
+					<a href="http://127.0.0.1:5000/log">Messages and Log</a>
+				</li>
+				<li>
+					<a href="http://127.0.0.1:5000/toolsData" role="button">Tools and Data</a>
+				</li>
+			</ul>
+		</nav>
+		<main class="container">
+			<section class="messages-container" id="messages">
+				<p>Loading messages...</p>
+			</section>
+			<section class="filter-section">
+				<h2>Filter Messages</h2>
+				<label for="message-date">Date:</label>
+				<input type="date" id="message-date">
+				<label for="message-type">Type:</label>
+				<select id="message-type">
+					<option value="all">All</option>
+					<option value="critical">Critical</option>
+					<option value="warning">Warning</option>
+					<option value="success">Success</option>
+				</select>
+				<button onclick="filterMessages()">Filter</button>
+			</section>
+			<section>
+				<h2>Messages:</h2>
+				<ul id="message-list" class="message-list">
+					<!-- Messages will be dynamically inserted here -->
+				</ul>
+			</section>
+		</main>
+		<footer class="container">
+			<small>
+				<a href="https://youtu.be/dQw4w9WgXcQ">Privacy Policy • Terms of Service</a>
+			</small>
+		</footer>
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const darkModeToggle = document.getElementById('dark-mode-toggle');
+				const isDarkMode = localStorage.getItem('darkMode') === 'true';
+				document.body.classList.toggle('dark-mode', isDarkMode);
+				darkModeToggle.checked = isDarkMode;
+				darkModeToggle.addEventListener('change', function() {
+					document.body.classList.toggle('dark-mode', this.checked);
+					localStorage.setItem('darkMode', this.checked);
+				});
+			});
+			async function fetchMessages(date = '', type = 'all') {
+				const messagesElement = document.getElementById('messages');
+				try {
+					const dateOffset = new Date();
+					dateOffset.setHours(dateOffset.getHours() - 3); // Adjust for last three hours
+					const formattedDate = date || dateOffset.toISOString().split('T')[0]; // Use provided date or default to last three hours
+					// Replace URL with your actual API endpoint
+					const response = await fetch(`http://127.0.0.1:5000/api/sensor-data`);
+					if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+					const data = await response.json();
+					if (data.length === 0) throw new Error("No messages found.");
+					// Display data in messagesElement
+					messagesElement.innerHTML = data.map(msg => `
+							<p>${msg.content}</p>`).join('');
+				} catch (error) {
+					console.error('Fetch error:', error.message);
+					messagesElement.innerHTML = '  No messages found or an error occurred. ';
+				}finally {
+                        await adjustFetchTiming(); // Schedule the next fetch
+                    }
+			}
+            async function adjustFetchTiming() {
+    const timingResponse = await fetch('http://127.0.0.1:5001/api/data-timing');
+    const timingData = await timingResponse.json();
+
+    const interval = timingData.interval; // Interval in seconds
+    const startTime = new Date(timingData.startTime); // Assuming ISO string format
+
+    // Calculate next expected data generation time
+    const now = new Date();
+    const elapsed = (now - startTime) / 1000; // Elapsed time in seconds
+    const nextInterval = interval - (elapsed % interval);
+
+    setTimeout(fetchSensorData, nextInterval * 1000); // Adjust initial fetch to align with the next data generation interval
+}
+
+// Call adjustFetchTiming instead of directly calling fetchSensorData
+adjustFetchTiming();
+
+			function displayMessages(messages) {
+				const listElement = document.getElementById('message-list');
+				listElement.innerHTML = ''; // Clear existing messages
+				messages.forEach(message => {
+					const item = document.createElement('li');
+					item.classList.add(`alert`, `alert-${message.type}`);
+					item.textContent = message.content;
+					listElement.appendChild(item);
+				});
+			}
+			async function filterMessages() {
+				const date = document.getElementById('message-date').value;
+				const type = document.getElementById('message-type').value;
+				const messages = await fetchMessages(date, type);
+				displayMessages(messages);
+			}
+			document.addEventListener('DOMContentLoaded', function() {
+                adjustFetchTiming(); // This now handles the initial and subsequent data fetches
+			    fetchMessages().then(displayMessages);})
+		</script>
+	</body>
+</html>
