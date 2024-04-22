@@ -1,7 +1,6 @@
 from mq2 import MQ2
 from mq3 import MQ3
 from mq4 import MQ4
-# from mq5 import MQ5
 from mq135 import MQ135
 from mq6 import MQ6
 from mq7 import MQ7
@@ -10,14 +9,20 @@ from mq9 import MQ9
 import csv
 import time
 
-filename = "mq_sensors_log.csv"
+# Maximum recommended ppm values for specific gases
+max_ppm_thresholds = {
+    'CO': 9,       # Example thresholds
+    'LPG': 1000,   # Adjust according to your needs
+    'SMOKE': 1200,
+    'ALCOHOL': 400,
+    # Add other gases and their thresholds here
+}
 
-# Initialize sensors
+# Sensor initialization
 sensors = {
     'MQ2': MQ2(),
     'MQ3': MQ3(),
     'MQ4': MQ4(),
-    # 'MQ5': MQ5(),
     'MQ135': MQ135(),
     'MQ6': MQ6(),
     'MQ7': MQ7(),
@@ -25,32 +30,39 @@ sensors = {
     'MQ9': MQ9(),
 }
 
-# Create header row in new CSV file
+filename = "mq_sensors_log.csv"
+
+# Create CSV header
+headers = ['Timestamp']
+for sensor_name in sensors.keys():
+    for gas in max_ppm_thresholds.keys():
+        headers.append(f'{sensor_name}_{gas}_ppm')
+        headers.append(f'{sensor_name}_{gas}_PercentOfMax')
+
 with open(filename, 'w', newline='') as file:
     writer = csv.writer(file)
-    headers = ['Timestamp'] + [f'Raw_value_{name}' for name in sensors.keys()]
     writer.writerow(headers)
 
 try:
     print("Press CTRL+C to abort.\n")
-
+    
     while True:
         data_row = [time.strftime('%Y-%m-%d %H:%M:%S')]  # Include current timestamp
-        for name, sensor in sensors.items():
-            measurement = sensor.MQPercentage()
-            data_row.append(measurement["RAW_VALUE"])  # Append RAW_VALUE for each sensor
-            
+        for sensor_name, sensor in sensors.items():
+            readings = sensor.MQPercentage()  # Assume this returns ppm readings for all gases
+            for gas, max_ppm in max_ppm_thresholds.items():
+                ppm_value = readings.get(gas, 0)  # Default to 0 if gas not in readings
+                percent_of_max = (ppm_value / max_ppm) * 100
+                data_row.extend([ppm_value, percent_of_max])
+                
         # Write data row to csv file
         with open(filename, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(data_row)
         
-        time.sleep(58)  # Adjust the sleep time as needed
+        time.sleep(58)  # Sleep for 58 seconds before next measurement
     
-# Handle script interruption
 except KeyboardInterrupt:
-    print("Measurement stopped by User")
-    with open(filename, 'r') as file:
-        print(file.read())
+    print("\nMeasurement stopped by User")
 except Exception as e:
-    print(f"\nAbort by user or error: {e}")
+    print(f"\nError occurred: {e}")
