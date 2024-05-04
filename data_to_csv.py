@@ -17,17 +17,27 @@ csv_file_path = 'sensor_readings.csv'
 
 # Collect data from each sensor module
 def collect_sensor_data():
-    # Example assuming each module has a get_data() function returning a dict of readings
-    # Adjust these calls according to your module functions and returned data structures
-    mq2_data = mq2.get_data()
-    mq3_data = mq3.get_data()
-    mq4_data = mq4.get_data()
-    mq5_data = mq5.get_data()
-    mq6_data = mq6.get_data()
-    mq7_data = mq7.get_data()
-    mq8_data = mq8.get_data()
-    mq9_data = mq9.get_data()
-    mq135_data = mq135.get_data()
+    # Instantiate each sensor class
+    mq2 = MQ2()
+    mq3 = MQ3()
+    mq4 = MQ4()
+    mq5 = MQ5()
+    mq6 = MQ6()
+    mq7 = MQ7()
+    mq8 = MQ8()
+    mq9 = MQ9()
+    mq135 = MQ135()
+
+    # Call MQPercentage method on each sensor instance
+    mq2_data = mq2.MQPercentage()
+    mq3_data = mq3.MQPercentage()
+    mq4_data = mq4.MQPercentage()
+    mq5_data = mq5.MQPercentage()
+    mq6_data = mq6.MQPercentage()
+    mq7_data = mq7.MQPercentage()
+    mq8_data = mq8.MQPercentage()
+    mq9_data = mq9.MQPercentage()
+    mq135_data = mq135.MQPercentage()
 
     # Compile data into a single record, ensure order matches CSV format
     data_record = [
