@@ -2,90 +2,78 @@ import time
 import math
 import board
 import busio
+import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
-from adafruit_ads1x15.ads1115 import ADS1115
 
 class MQ135():
-    RL_VALUE = 10  # Load resistance in kilo ohms
+    RL_VALUE = 10  # load resistance in kilo ohms
     RO_CLEAN_AIR_FACTOR = 3.6  # Sensor resistance in clean air divided by RO
-
-    # Calibration and read sample settings
     CALIBRATION_SAMPLE_TIMES = 50
-    CALIBRATION_SAMPLE_INTERVAL = 50
-    READ_SAMPLE_INTERVAL = 50
+    CALIBRATION_SAMPLE_INTERVAL = 50  # in milliseconds
+    READ_SAMPLE_INTERVAL = 50  # in milliseconds
     READ_SAMPLE_TIMES = 5
 
-    # Gas types
-    GAS_ACETON = 0
-    GAS_TOLUENO = 1
-    GAS_ALCOHOL = 2
-    GAS_CO2 = 3
-    GAS_NH4 = 4
-    GAS_CO = 5
-
-    def __init__(self, Ro=10, channel=0):
+    def __init__(self, Ro=10, channel=ADS.P0):
         self.Ro = Ro
-        self.i2c = busio.I2C(board.SCL, board.SDA)
-        self.ads = ADS1115(self.i2c)
-        self.channel = AnalogIn(self.ads, channel)
-        self.ads.gain = 1
+        i2c = busio.I2C(board.SCL, board.SDA)
+        ads = ADS.ADS1115(i2c, address=0x49)
+        self.chan = AnalogIn(ads, channel)
 
-        # Gas calibration curves
-        self.ACETONCurve = [1.0, 0.18, -0.32]
-        self.TOLUENOCurve = [1.0, 0.2, -0.30]
-        self.AlcoholCurve = [1.0, 0.28, -0.32]
-        self.CO2Curve = [1.0, 0.38, -0.37]
-        self.NH4Curve = [1.0, 0.42, -0.42]
-        self.COCurve = [1.0, 0.45, -0.26]
-
-        print("Calibrating MQ-135...")
+        print("Calibrating MQ-135 on ADS1115 at address 0x49...")
         self.Ro = self.MQ135_Calibration()
-        print(f"Calibration of MQ-135 is done. Ro={self.Ro:.2f} kohm\n")
+        print("Calibration of MQ-135 is done...")
+        print("MQ-135 Ro=%f kohm" % self.Ro)
+        print("\n")
 
     def MQ135_Calibration(self):
         val = 0.0
-        for _ in range(self.CALIBRATION_SAMPLE_TIMES):
-            val += self.MQResistanceCalculation(self.channel.value)
+        for i in range(self.CALIBRATION_SAMPLE_TIMES):
+            val += self.MQResistanceCalculation(self.chan.value)
             time.sleep(self.CALIBRATION_SAMPLE_INTERVAL / 1000.0)
-        val /= self.CALIBRATION_SAMPLE_TIMES
-        return val / self.RO_CLEAN_AIR_FACTOR
+        val = val / self.CALIBRATION_SAMPLE_TIMES
+        val = val / self.RO_CLEAN_AIR_FACTOR
+        return val
 
     def MQResistanceCalculation(self, raw_adc):
         if raw_adc == 0:
             raw_adc = 1
-        return float(self.RL_VALUE * (self.ads.gain * 65535 - raw_adc) / float(raw_adc))
+        return float(self.RL_VALUE * (32767.0 - raw_adc) / float(raw_adc))
 
     def MQRead(self):
         rs = 0.0
-        for _ in range(self.READ_SAMPLE_TIMES):
-            adc_value = self.channel.value
-            rs += self.MQResistanceCalculation(adc_value)
+        raw_value = 0.0
+        for i in range(self.READ_SAMPLE_TIMES):
+            raw_value += self.chan.value
+            rs += self.MQResistanceCalculation(self.chan.value)
             time.sleep(self.READ_SAMPLE_INTERVAL / 1000.0)
-        rs /= self.READ_SAMPLE_TIMES
-        return rs
+        rs = rs / self.READ_SAMPLE_TIMES
+        raw_value = raw_value / self.READ_SAMPLE_TIMES
+        return rs, raw_value
 
     def MQPercentage(self):
-        read = self.MQRead()
-        return {
-            "ACETON": self.MQGetGasPercentage(read / self.Ro, self.GAS_ACETON),
-            "TOLUENO": self.MQGetGasPercentage(read / self.Ro, self.GAS_TOLUENO),
-            "ALCOHOL": self.MQGetGasPercentage(read / self.Ro, self.GAS_ALCOHOL),
-            "CO2": self.MQGetGasPercentage(read / self.Ro, self.GAS_CO2),
-            "NH4": self.MQGetGasPercentage(read / self.Ro, self.GAS_NH4),
-            "CO": self.MQGetGasPercentage(read / self.Ro, self.GAS_CO),
-        }
+        val = {}
+        read, raw_value = self.MQRead()
+        val["ACETON"] = self.MQGetGasPercentage(read / self.Ro, self.GAS_ACETON)
+        val["TOLUENO"] = self.MQGetGasPercentage(read / self.Ro, self.GAS_TOLUENO)
+        val["ALCOHOL"] = self.MQGetGasPercentage(read / self.Ro, self.GAS_ALCOHOL)
+        val["CO2"] = self.MQGetGasPercentage(read / self.Ro, self.GAS_CO2)
+        val["NH4"] = self.MQGetGasPercentage(read / self.Ro, self.GAS_NH4)
+        val["CO"] = self.MQGetGasPercentage(read / self.Ro, self.GAS_CO)
+        val["RAW_VALUE"] = raw_value
+        return val
 
     def MQGetGasPercentage(self, rs_ro_ratio, gas_id):
-        curve = {
+        curves = {
             self.GAS_ACETON: self.ACETONCurve,
             self.GAS_TOLUENO: self.TOLUENOCurve,
             self.GAS_ALCOHOL: self.AlcoholCurve,
             self.GAS_CO2: self.CO2Curve,
             self.GAS_NH4: self.NH4Curve,
             self.GAS_CO: self.COCurve
-        }.get(gas_id, [1.0, 0.0, 0.0])
-        return math.pow(10, ((math.log(rs_ro_ratio) - curve[1]) / curve[2]) + curve[0])
+        }
+        pcurve = curves[gas_id]
+        return (math.pow(10, (((math.log(rs_ro_ratio) - pcurve[1]) / pcurve[2]) + pcurve[0])))
 
-if __name__ == '__main__':
-    mq135_sensor = MQ135()
-    print(mq135_sensor.MQPercentage())
+# Example of using the MQ135 class
+sensor = MQ135()
+print(sensor.MQPercentage())
