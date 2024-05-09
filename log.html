@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas Sensor Dashboard - Logs & Messages</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            margin: 0;
+            padding: 20px;
+        }
+        .container, .container-fluid {
+            max-width: 1200px;
+            color: #1d1d1f;
+        }
+        .messages-container {
+            background-color: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .chart canvas, .event-log table, .monitor table {
+            width: 100%;
+        }
+        .log-table th, .log-table td, .monitor-table th, .monitor-table td {
+            border-color: #e1e1e1;
+        }
+
+        .dark-mode .messages-container {
+            background-color: #222;
+            color: #eee;
+        }
+        footer {
+            margin-top: 40px;
+            text-align: center;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        .message-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .message-list li {
+            margin-bottom: 10px;
+        }
+        .messages-container {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li>
+                <strong>
+                    <a href="http://127.0.0.1:5000/">Gas Sensor Dashboard</a>
+                </strong>
+            </li>
+        </ul>
+        <ul>
+            <li>
+                <a href="http://127.0.0.1:5000/log">Messages and Log</a>
+            </li>
+            <li>
+                <a href="http://127.0.0.1:5000/toolsData" role="button">Tools and Data</a>
+            </li>
+        </ul>
+    </nav>
+    <main class="container">
+        <section class="messages-container" id="messages">
+            <p>Loading messages...</p>
+        </section>
+        <section class="filter-section">
+            <h2>Filter Messages</h2>
+            <label for="message-date">Date:</label>
+            <input type="date" id="message-date">
+            <label for="message-type">Type:</label>
+            <select id="message-type">
+                <option value="all">All</option>
+                <option value="critical">Critical</option>
+                <option value="warning">Warning</option>
+                <option value="success">Success</option>
+            </select>
+            <button onclick="filterMessages()">Filter</button>
+        </section>
+        <section>
+            <h2>Messages:</h2>
+            <ul id="message-list" class="message-list">
+                // messages werden hier eingefügt
+            </ul>
+        </section>
+    </main>
+    <footer class="container">
+        <small>
+            <a href="https://youtu.be/dQw4w9WgXcQ">Privacy Policy • Terms of Service</a>
+        </small>
+    </footer>
+    <script>
+
+        <!-- Ausgebauter Eventlistener fuer den Darkmode aus Index -->
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            darkModeToggle.checked = isDarkMode;
+            darkModeToggle.addEventListener('change', function() {
+                document.body.classList.toggle('dark-mode', this.checked);
+                localStorage.setItem('darkMode', this.checked);
+            });
+
+            fetchLogs().then(displayLogs);
+        });
+
+         <!-- Diese Funktion ruft die Daten vom RaspberryPIab mit integriertem Error Log: Referenz: github.com/bayramsoltan/tvseries-api; Error handling mit ChatGPT entwickelt, vgl: Index.html -->
+        async function fetchLogs() {
+            const logsElement = document.getElementById('messages');
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/logs');
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const logs = await response.json();
+                if (logs.length === 0) throw new Error("No logs found.");
+                return logs;
+            } catch (error) {
+                console.error('Fetch error:', error.message);
+                logsElement.innerHTML = 'No logs found or an error occurred.';
+                return [];
+            }
+        }
+
+        <!-- Funktionen zum Darstellen der Logeinträge, Logik umgesetzt mithilfe von stackoverflow.com/questions/49503523/get-element-innerhtml-and-add-to-list?rq=3-->
+        function displayLogs(logs) {
+            const listElement = document.getElementById('message-list');
+            listElement.innerHTML = ''; // Entfernt Logs
+            logs.forEach(log => {
+                const item = document.createElement('li');
+                item.classList.add('message');
+                item.innerHTML = `
+                    <strong>Timestamp:</strong> ${log.timestamp}<br>
+                    <strong>Alcohol:</strong> ${log.Alcohol}<br>
+                    <strong>Methane:</strong> ${log.Methane}<br>
+                    <strong>NaturalGas:</strong> ${log.NaturalGas}<br>
+                    <strong>CO:</strong> ${log.CO}<br>
+                    <strong>H2:</strong> ${log.H2}<br>
+                    <strong>CO2:</strong> ${log.CO2}
+                `;
+                listElement.appendChild(item);
+            });
+        }
+        <!-- "Tote" Funktion-->
+        async function filterMessages() {
+            const date = document.getElementById('message-date').value;
+            const type = document.getElementById('message-type').value;
+            const messages = await fetchLogs(date, type);
+            displayLogs(messages);
+        }
+    </script>
+</body>
+</html>

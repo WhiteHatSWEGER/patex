@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas Sensor Dashboard - Tools and Data</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            margin: 0;
+            padding: 20px;
+        }
+        .container, .container-fluid {
+            max-width: 1200px;
+            color: #1d1d1f;
+        }
+        .chart, .messages, .monitor {
+            background-color: #ffffff;
+            border: 1px solid #e1e1e1;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .dark-mode {
+            background-color: #1d1d1f;
+            color: #f5f5f7;
+        }
+        .error-log {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        footer {
+            margin-top: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong><a href="#">Gas Sensor Dashboard</a></strong></li>
+        </ul>
+        <ul>
+            <li><a href="/log">Messages and Log</a></li>
+            <li><a href="/toolsData" role="button">Tools and Data</a></li>
+        </ul>
+    </nav>
+    <main class="container">
+        <section class="chart">
+            <div>
+                <input type="checkbox" id="dark-mode-toggle" name="darkMode" />
+                <label for="dark-mode-toggle">Dark Mode</label>
+            </div>
+            <div id="chart-legend"></div>
+            <canvas id="overview-chart"></canvas>
+            <div class="loading" style="display: none;">Loading...</div>
+            <div>
+                <label for="sensor-select">Select System:</label>
+                <select id="sensor-select">
+                    <option value="all">All Systems</option>
+                </select>
+                <label for="gas-select">Select Gas:</label>
+                <select id="gas-select">
+                    <option value="Alcohol">Alcohol</option>
+                    <option value="Methane">Methane</option>
+                    <option value="NaturalGas">NaturalGas</option>
+                    <option value="CO">CO</option>
+                    <option value="H2">H2</option>
+                    <option value="CO2">CO2</option>
+                </select>
+                <button id="reload-data">Reload Data</button>
+                <div class="error-log" id="error-log"></div>
+            </div>
+        </section>
+        <section>
+            <h2>Add New System</h2>
+            <form id="add-system-form">
+                <label for="system-name">System Name:</label>
+                <input type="text" id="system-name" name="system-name" required>
+                <label for="gases">Gas Names (comma separated):</label>
+                <input type="text" id="gases" name="gases" required>
+                <label for="api-url">API URL:</label>
+                <input type="text" id="api-url" name="api-url" required>
+                <button type="submit">Add System</button>
+                <div class="error-log" id="add-system-error-log"></div>
+            </form>
+        </section>
+    </main>
+    <footer class="container">
+        <small><a href="https://youtu.be/dQw4w9WgXcQ">Privacy Policy • Terms of Service</a></small>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2/dist/chartjs-plugin-annotation.min.js"></script>
+    
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000';  // Replace with your local server URL
+        const PI_API_BASE_URL = 'http://192.168.232.156:5001';  // Replace with your Raspberry Pi API base URL
+        <!-- Hier wird die Grafik initialisiert, entwickelt mit Hilfe der Chart.js doks und ChatGPT für das Tick-Limit und bei kleineren Adjustments -->
+        const chartOptions = {
+            tooltips: {
+                enabled: true,
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        var label = data.datasets[tooltipItem.datasetIndex].label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += Math.round(tooltipItem.yLabel * 100) / 100;
+                        return label;
+                    }
+                }
+            },
+            title: {
+                display: true,
+                text: 'All Sensors' // Default title
+            },
+            legend: {
+                display: false
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        max: 120,
+                        min: 0,
+                        stepSize: 10
+                    },
+                    gridLines: {
+                        display: true,
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }],
+                xAxes: [{
+                    type: 'time',
+                    time: {
+                        unit: 'minute',
+                        displayFormats: {
+                            minute: 'HH:mm'
+                        }
+                    },
+                    ticks: {
+                        display: true,
+                        maxTicksLimit: 15,
+                        callback: function(value, index, values) {
+                            return customDateFormat(new Date(values[index].value));
+                        }
+                    },
+                    gridLines: {
+                        display: false
+                    }
+                }]
+            },
+            plugins: {
+                datalabels: {
+                    display: false
+                },
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
+                    },
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true,
+                        },
+                        mode: 'x',
+                    },
+                },
+                annotation: {
+                    annotations: [{
+                        type: 'line',
+                        mode: 'horizontal',
+                        scaleID: 'y-axis-0',
+                        value: 100,
+                        borderColor: 'lightgrey',
+                        borderWidth: 2,
+                        label: {
+                            enabled: true,
+                            content: 'Warning Level',
+                            position: 0,
+                        },
+                    }]
+                }
+            }
+        };
+    
+        // Helper Functions
+        function customDateFormat(date) {
+            const options = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            return new Intl.DateTimeFormat('en-US', options).format(date);
+        }
+    
+        function getRandomColor() {
+            return '#' + Math.floor(Math.random() * 16777215).toString(16);
+        }
+    
+        <!--Event-listener, die die Website aktualisieren und den Dark-mode toggled-->
+        document.getElementById('dark-mode-toggle').addEventListener('change', function(event) {
+            document.body.classList.toggle('dark-mode', event.target.checked);
+        });
+    
+        document.getElementById('sensor-select').addEventListener('change', function(event) {
+            fetchSensorData();
+        });
+    
+        document.getElementById('reload-data').addEventListener('click', fetchSensorData);
+        document.getElementById('gas-select').addEventListener('change', fetchSensorData);
+    
+        document.getElementById('add-system-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const systemName = document.getElementById('system-name').value;
+            const gases = document.getElementById('gases').value.split(',').map(gas => gas.trim());
+            const apiUrl = document.getElementById('api-url').value;
+            const errorLog = document.getElementById('add-system-error-log');
+            errorLog.textContent = '';  // Entfernt vorherige Fehlermeldung
+            <!-- Diese Funktion fügt die Systeme der Datenbank hinzu mit integriertem Error Log: Referenz: github.com/bayramsoltan/tvseries-api; Error handling mit ChatGPT entwickelt, vgl: Index.html -->
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/add-system`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: systemName, gases, api_url: apiUrl })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error ${response.status}: ${errorData.error}`);
+                }
+                alert('System added successfully!');
+                await fetchSystems(); // Fetched die Liste der Systeme aus der Datenbanl
+            } catch (error) {
+                console.error('Error adding system:', error);
+                errorLog.textContent = error.message;
+            }
+        });
+    <!-- Diese Funktion ruft die Daten von der Datenbank ab mit integriertem Error Log: Referenz: github.com/bayramsoltan/tvseries-api; Error handling mit ChatGPT entwickelt, vgl: Index.html; erwiterte Logik mit Hilfe von ChatGPT -->
+        async function fetchSystems() {
+            const errorLog = document.getElementById('error-log');
+            errorLog.textContent = '';  // Clear previous error message
+    
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/systems`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error ${response.status}: ${errorData.error}`);
+                }
+                const systems = await response.json();
+                const sensorSelect = document.getElementById('sensor-select');
+                sensorSelect.innerHTML = '<option value="all">All Systems</option>'; // Entfernt bisher gewählte optionen
+                systems.forEach(system => {
+                    const option = document.createElement('option');
+                    option.value = system.id;
+                    option.textContent = system.name;
+                    sensorSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching systems:', error);
+                errorLog.textContent = error.message;
+                addErrorDataPoint();
+            }
+        }
+    <!-- Diese Funktion ruft die Daten vom RaspberryPIab mit integriertem Error Log: Referenz: github.com/bayramsoltan/tvseries-api; Error handling mit ChatGPT entwickelt, vgl: Index.html -->
+        async function fetchSensorData() {
+            const errorLog = document.getElementById('error-log');
+            errorLog.textContent = '';  // Clear previous error message
+    
+            let url = `${PI_API_BASE_URL}/api/sensor-data`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error ${response.status}: ${errorData.error}`);
+                }
+                const data = await response.json();
+                console.log('Fetched data:', data);  // Logt dass die Daten gefetched wurden
+                processSensorData(data);
+            } catch (error) {
+                console.error('Error fetching sensor data:', error);
+                errorLog.textContent = error.message;
+                addErrorDataPoint();
+            }
+        }
+        <!-- Vergleich Chart.js Dokumentation, siehe chartjs.org/docs/latest/general/data-structures.html;-->
+        function processSensorData(data) {
+            const chart = window.chart;
+    
+            const gasTypes = ['Alcohol', 'Methane', 'NaturalGas', 'CO', 'H2', 'CO2'];
+    
+            // Loggt die Datenüberprüfung in der Console für das Debugging
+            console.log('Processing data:', data);  
+    
+            // Checkt ob das Datenformat korrekt ist
+            if (!Array.isArray(data) || data.length < 7) {
+                console.error('Unexpected data format:', data);
+                return;
+            }
+    
+            const [timestamp, ...values] = data;
+            const date = new Date(timestamp);
+    
+            gasTypes.forEach((gasType, index) => {
+                let dataset = chart.data.datasets.find(ds => ds.label === gasType);
+    
+                if (!dataset) {
+                    dataset = {
+                        label: gasType,
+                        data: [],
+                        backgroundColor: getRandomColor(),
+                        borderColor: getRandomColor(),
+                        borderWidth: 1,
+                        fill: false
+                    };
+                    chart.data.datasets.push(dataset);
+                }
+
+                dataset.data.push({
+                    t: date,
+                    y: parseFloat(values[index])
+                });
+            });
+    
+            chart.update();
+            console.log('Updated chart with data:', chart.data);  // Logt chart Daten
+        }
+    
+        function addErrorDataPoint() {
+            const chart = window.chart;
+            const errorTime = new Date();
+            const errorDataset = {
+                label: 'Error',
+                data: [{
+                    t: errorTime,
+                    y: 0
+                }],
+                borderColor: '#FF0000',
+                backgroundColor: '#FF0000',
+                fill: false,
+                borderDash: [5, 5]
+            };
+    
+            if (chart.data.datasets.length === 0) {
+                chart.data.datasets.push(errorDataset);
+            } else {
+                chart.data.datasets.forEach(dataset => {
+                    dataset.data.push({ t: errorTime, y: 0 });
+                    dataset.borderColor = 'red';
+                    dataset.pointBackgroundColor = 'red';
+                    dataset.pointBorderColor = 'red';
+                });
+            }
+    
+            chart.update();
+        }
+    
+        const ctx = document.getElementById('overview-chart').getContext('2d');
+        window.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: chartOptions
+        });
+    
+        fetchSystems();
+        fetchSensorData();
+        setInterval(fetchSensorData, 60000); // Fetcht die Daten alle 60 Sekunden
+    </script>
+    
+    
+        </body>
+        </html>

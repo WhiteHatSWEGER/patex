@@ -1,0 +1,68 @@
+openapi: 3.0.0
+info:
+  title: Sensor Data API
+  description: API documentation for the Sensor Data service.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+paths:
+  /api/logs:
+    get:
+      summary: Get logs
+      description: Retrieve logs where certain gas values exceed 100.
+      responses:
+        '200':
+          description: A JSON array of logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    timestamp:
+                      type: string
+                    Alcohol:
+                      type: integer
+                    Methane:
+                      type: integer
+                    NaturalGas:
+                      type: integer
+                    CO:
+                      type: integer
+                    H2:
+                      type: integer
+                    CO2:
+                      type: integer
+        '500':
+          description: Server error
+  /api/add-system:
+    post:
+      summary: Add a system
+      description: Add a new system to the database.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                gases:
+                  type: array
+                  items:
+                    type: string
+                api_url:
+                  type: string
+      responses:
+        '201':
+          description: System added successfully
+        '500':
+          description: Server error
+  /api/systems:
+    get:
+      summary: Get systems
+      description: Retrieve a list of systems.
+      responses:
+        '200':
+          description: A JSON array o
