@@ -1,6 +1,6 @@
 import csv
 from datetime import datetime
-# Import sensor modules
+# iportieren der Sensormodule
 import mq2
 import mq3
 import mq4
@@ -11,14 +11,13 @@ import mq8
 import mq9
 import mq135
 
-# Path to the output CSV file
+# Pfad der Ziel-CSV
 csv_file_path = 'sensor_readings.csv'
 
 
-# Collect data from each sensor module
+# Sammeln der Sensordaten
 def collect_sensor_data():
-    # Example assuming each module has a get_data() function returning a dict of readings
-    # Adjust these calls according to your module functions and returned data structures
+
     mq3_data = mq3.get_data()
     mq4_data = mq4.get_data()
     mq5_data = mq5.get_data()
@@ -26,7 +25,7 @@ def collect_sensor_data():
     mq8_data = mq8.get_data()
     mq135_data = mq135.get_data()
 
-    # Compile data into a single record, ensure order matches CSV format
+    # Daten im richtigen Format zusammenfügen
     data_record = [
         datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  # Timestamp
         mq3_data['Alcohol'],
@@ -39,7 +38,7 @@ def collect_sensor_data():
     return data_record
 
 
-# Write data to the CSV file
+# Daten in die CSV schreiben
 def write_data_to_csv(data_record):
     with open(csv_file_path, mode='a', newline='') as file:
         csv_writer = csv.writer(file)
