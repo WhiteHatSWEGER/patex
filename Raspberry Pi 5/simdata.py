@@ -3,9 +3,9 @@ import random
 from datetime import datetime, timedelta
 from time import sleep
 
-# Configuration
-output_file = 'basic.csv'  # Existing CSV file
-time_interval = timedelta(seconds=30)  # Time interval between data points
+# Konfiguration
+output_file = 'basic.csv' 
+time_interval = timedelta(seconds=30)  # zeitintervall
 
 # Gas types and their value ranges
 gas_types = ['Alcohol', 'Methane', 'NaturalGas', 'CO', 'H2', 'CO2']
@@ -18,13 +18,13 @@ value_ranges = {
     'CO2': (100, 120)
 }
 
-# Function to generate a random value within a specified range
+
 def generate_random_value(value_range):
     return random.uniform(*value_range)
 
 
 while True:
-    # Get the last timestamp from the existing CSV file
+    # Den letzten Timsestamp der CSV
     try:
         with open(output_file, 'r') as csvfile:
             last_row = list(csv.reader(csvfile))[-1]
@@ -32,12 +32,12 @@ while True:
     except (FileNotFoundError, IndexError):
         last_timestamp = datetime.now() - time_interval
 
-    # Generate a new row of data
+    # neue  Daten generieren
     new_timestamp = last_timestamp + time_interval
     new_row = [new_timestamp.strftime('%Y-%m-%d %H:%M:%S')]
     new_row.extend(generate_random_value(value_ranges[gas]) for gas in gas_types)
 
-    # Append the new row to the CSV file
+    # Neue Zeile der CSV
     with open(output_file, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(new_row)
